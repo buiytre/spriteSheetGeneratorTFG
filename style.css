@@ -1,0 +1,25 @@
+#menuIzq {
+    width: 10%;
+    float: left;
+}
+#zonaCentral {
+    width: 80%;
+    float: left;
+}
+#menuDerecho {
+    width: 10%;
+    float:right;
+    margin: 0;
+    padding: 0;
+}
+
+#preview {
+}
+
+#testCanvas{
+
+}
+
+#spriteList {
+    width: 100%;
+}

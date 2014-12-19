@@ -1,14 +1,41 @@
 <html>
 <head>
-<script src="test.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="point.js"></script>
+    <script src="sprite.js"></script>
+    <script src="frame.js"></script>
+    <script src="mainSpriteSheetEditor.js"></script>
+    <script src="spritesheet.js"></script>
 </head>
 <body>
-    <canvas id="preview"></canvas>
+<div id="contenedor">
+    <div id="cabecera">
+        <p><input type="file" id="imagen" name="imagen" /></p>
+    </div>
 
-    <form>
-        <input type="file" id="imagen" name="imagen" />
-        <input type="button" onclick="zoom()" value="Zoom" />
-        <input type="button" onclick="selection()" value="selection" />
-    </form>
+    <div id="menuIzq">
+        <p><input type="button" onclick="zoom()" value="Zoom" /></p>
+        <p><input type="button" onclick="selection()" value="selection" /></p>
+        <p><input type="button" onclick="saveSpriteSheet()" value="Save" /></p>
+        <p><input type="button" onclick="downloadFile('Test, poner aqui valores del spritesheet para los sprites')" value="Test Descarga CSV" /></p>
+    </div>
+    <div id="zonaCentral">
+        <div id="coords"></div>
+        <canvas id="preview"></canvas>
+    </div>
+    <div id="menuDerecho">
+        <p>
+            <label for="spriteName">Nombre sprite:</label><br />
+            <input type="text" value="" id="spriteName" /><br />
+            <input type="button" onclick="addSprite()" value = "Añadir sprite" />
+        </p>
+        <p><select id="spriteList" name="spriteList" size="10"></select></p>
+        <p><canvas id="testCanvas"></canvas></p>
+
+    </div>
+    <div id="pie">
+    </div>
+</div>
 </body>
 </html>
