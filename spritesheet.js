@@ -38,18 +38,19 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     }
 };
 
-Spritesheet.prototype.paintSprite = function(spriteName, canvas) {
+Spritesheet.prototype.paintSpritePreview = function(spriteName, canvas) {
+    canvas.height = this.maxheight;
     var ctx = canvas.getContext('2d');
-    var found = false;
-    for (var i=0; i < this.spriteList.length && !found; i++){
-        if (this.spriteList[i].getName() == spriteName){
-            var thisSprite = this.spriteList[i];
-            setInterval(function(){
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                var image = thisSprite.getNextFrame().getImageFrame();
-                ctx.drawImage(image,0,0,image.width, image.height,0,0,image.width,image.height);
-            }, 1000/24);
-            found = true;
+    var thisSprite = this.getSpriteByName(spriteName);
+    if (thisSprite != null){
+        thisSprite.resetAnimation();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        var y = 0;
+        while (thisSprite.hasNextFrame()){
+            var frameTmp = thisSprite.getNextFrame();
+            var image = frameTmp.getImageFrame();
+            ctx.drawImage(image,0,y,image.width,image.height);
+            y = y + image.height;
         }
     }
 };
@@ -66,11 +67,44 @@ Spritesheet.prototype.getSpriteSheet = function(){
         while (this.spriteList[i].hasNextFrame()){
             var spr = this.spriteList[i].getNextFrame();
             var img = spr.getImageFrame();
-            console.log("AAAAA: " + w + " " + h + " " + img.width + " " + img.height);
             ctx.drawImage(img,w,h);
             w = w + img.width;
             h = h + img.height;
         }
     }
     return newCanvas;
+};
+
+Spritesheet.prototype.getSpriteByName = function(spriteName){
+    for (var i=0; i < this.spriteList.length; i++){
+        if (this.spriteList[i].getName() == spriteName){
+            return this.spriteList[i];
+        }
+    }
+    return null;
+};
+
+Spritesheet.prototype.paintSelection = function(spriteName, mousePos,canvas) {
+    var ctx = canvas.getContext('2d');
+    var thisSprite = this.getSpriteByName(spriteName);
+    if (thisSprite != null){
+        var yIni = 0;
+        thisSprite.resetAnimation();
+        var found = false;
+        while (thisSprite.hasNextFrame() && !found){
+            var frameTmp = thisSprite.getNextFrame();
+            var image = frameTmp.getImageFrame();
+            var yEnd = yIni + image.height;
+            if (mousePos.y <= yEnd && mousePos.y >= yIni && mousePos.x >= 0 && mousePos.x <= image.width){
+                this.paintSpritePreview(spriteName, canvas);
+                ctx.strokeStyle = "#f00";
+                ctx.strokeRect(0, yIni, image.width, image.height);
+                found = true;
+            }
+            yIni = yEnd;
+        }
+    }
+    if (!found){
+        this.paintSpritePreview(spriteName, canvas);
+    }
 };

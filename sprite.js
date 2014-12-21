@@ -65,7 +65,6 @@ Sprite.prototype.getNextFrame = function(){
 
 Sprite.prototype.hasNextFrame = function(){
     var hasNext = true;
-    console.log("N: " + this.n + "/" + this.frameList.length );
     if (this.n >= this.frameList.length){
           hasNext = false;
     }

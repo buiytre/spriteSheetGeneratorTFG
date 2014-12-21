@@ -5,7 +5,6 @@
     var img = new Image;
     var scale = 1;
     var nullFunction = function(event){
-//        pinta();
         event.preventDefault();
     };
     var buttonLeft = nullFunction;
@@ -38,11 +37,9 @@ window.onload= function(){
         var url = URL.createObjectURL(file);
         img.onload = function(){
             scale = 1;
-            setInterval(function () {
-                pinta();
-            }, 100);
-          posDibujo.x=0;
-          posDibujo.y=0;
+            pinta();
+            posDibujo.x=0;
+            posDibujo.y=0;
         };
         img.src = url;
     });
@@ -71,7 +68,6 @@ function pinta(){
     canvas.height = MAX_HEIGHT;
     ctx.clearRect(0,0,canvas.width, canvas.height);
     ctx.drawImage(img,posDibujo.x,posDibujo.y,img.width/scale,img.height/scale,0,0,img.width,img.height);
-    //console.log("painted");
 }
 
 
@@ -103,23 +99,41 @@ function zoom(){
 
 var pointOri = null;
 var pointDest = null;
+var intervalSelection = null;
 function selection(){
-    canvas.removeEventListener('click', buttonLeft);
-    canvas.removeEventListener('contextmenu', buttonRight, false); 
-    buttonLeft = function(event){
-        if (pointOri == null) pointOri = new Point(mousePos.x, mousePos.y);
-        else {
-            pointDest = pointDest = new Point(mousePos.x, mousePos.y);
-            saveFrameToSprite(pointOri,pointDest);
-            pointOri = null;
-            pointDest = null;
-        }
-    };
-    buttonRight = function(event){
-        event.preventDefault();
-    };
-    canvas.addEventListener("click", buttonLeft);
-    canvas.addEventListener('contextmenu', buttonRight, false); 
+    clearInterval(intervalSelection);
+    pinta();
+    if (document.getElementById("spriteList").selectedIndex == -1) {
+        alert("Has de seleccionar un sprite antes");
+    }else {
+        canvas.removeEventListener('click', buttonLeft);
+        canvas.removeEventListener('contextmenu', buttonRight, false);
+        buttonLeft = function (event) {
+            if (pointOri == null) {
+                pointOri = new Point(mousePos.x, mousePos.y);
+
+                intervalSelection = setInterval(function () {
+                    pinta();
+                    ctx.strokeStyle = "#f00";
+                    ctx.strokeRect(pointOri.x, pointOri.y, mousePos.x - pointOri.x, mousePos.y - pointOri.y);
+                }, 100);
+            }
+            else {
+                clearInterval(intervalSelection);
+                pinta();
+                pointDest = pointDest = new Point(mousePos.x, mousePos.y);
+                saveFrameToSprite(pointOri, pointDest);
+                pointOri = null;
+                pointDest = null;
+                intervalSelection = null;
+            }
+        };
+        buttonRight = function (event) {
+            event.preventDefault();
+        };
+        canvas.addEventListener("click", buttonLeft);
+        canvas.addEventListener('contextmenu', buttonRight, false);
+    }
 }
 
 function writeMessage(canvas, message, pos) {
@@ -149,8 +163,8 @@ function saveFrameToSprite(ori, dest){
     console.log(ori.x +' '+ ori.y + ' ' + dest.x + ' '+ dest.y+ ' Añadido ');
 
 
-    var canvastest = document.getElementById('testCanvas');
-    sheet.paintSprite(spriteName,canvastest);
+    var previewSpriteCanvas = document.getElementById('previewSpriteCanvas');
+    sheet.paintSpritePreview(spriteName,previewSpriteCanvas);
     //var cnvSpriteSheet = sheet.getSpriteSheet();
     //var ctx2 = cnvSpriteSheet.getContext('2d');
     //var imgdata2 = ctx2.getImageData(0,0,cnvSpriteSheet.width,cnvSpriteSheet.height);
@@ -189,4 +203,41 @@ function downloadFile(text){
     link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(text));
     link.click();
 
+}
+
+function changePreview(element){
+    var spriteName = element.options[element.selectedIndex].value;
+    var previewSpriteCanvas = document.getElementById('previewSpriteCanvas');
+    sheet.paintSpritePreview(spriteName,previewSpriteCanvas);
+}
+
+
+function resizeCanvas(canvas, width, height){
+    var newCanvas = document.createElement("canvas");
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+    newCanvas.getContext("2d").drawImage(canvas,0,0);
+
+    canvas.width = width;
+    canvas.height = height;
+
+    canvas.getContext("2d").drawImage(newCanvas,0,0);
+}
+
+function adjustMode(){
+    clearInterval(intervalSelection);
+    var spriteSelectedMenu = document.getElementById("spriteList");
+    if (spriteSelectedMenu.selectedIndex == -1) {
+        alert("Has de seleccionar un sprite antes");
+    }else{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvas.removeEventListener('click', buttonLeft);
+        canvas.removeEventListener('contextmenu', buttonRight, false);
+        var spriteName = spriteSelectedMenu.options[spriteSelectedMenu.selectedIndex].value;
+        sheet.paintSpritePreview(spriteName,canvas);
+        intervalSelection = setInterval(function () {
+            sheet.paintSelection(spriteName, mousePos,canvas);
+        }, 100);
+
+    }
 }

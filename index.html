@@ -16,6 +16,7 @@
 
     <div id="menuIzq">
         <p><input type="button" onclick="zoom()" value="Zoom" /></p>
+        <p><input type="button" onclick="adjustMode()" value="Adjust Mode" /></p>
         <p><input type="button" onclick="selection()" value="selection" /></p>
         <p><input type="button" onclick="saveSpriteSheet()" value="Save" /></p>
         <p><input type="button" onclick="downloadFile('Test, poner aqui valores del spritesheet para los sprites')" value="Test Descarga CSV" /></p>
@@ -30,8 +31,8 @@
             <input type="text" value="" id="spriteName" /><br />
             <input type="button" onclick="addSprite()" value = "Añadir sprite" />
         </p>
-        <p><select id="spriteList" name="spriteList" size="10"></select></p>
-        <p><canvas id="testCanvas"></canvas></p>
+        <p><select id="spriteList" name="spriteList" size="10" onchange="changePreview(this);"></select></p>
+        <p><canvas id="previewSpriteCanvas"></canvas></p>
 
     </div>
     <div id="pie">
