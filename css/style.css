@@ -14,7 +14,8 @@
 }
 
 #preview {
-
+    width: 99%;
+    height: 90%;
 }
 
 #previewSpriteCanvas{

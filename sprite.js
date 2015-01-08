@@ -11,7 +11,11 @@
 var Sprite = function(name){
     this.n = 0;
     this.frameList = new Array();
+    this.pos = new Array();
+    this.timeMs = new Array();
     this.name = name;
+    this.timeAnimationInverval = null;
+    this.canvasAnimation = null;
 };
 
 /**
@@ -20,6 +24,12 @@ var Sprite = function(name){
  */
 Sprite.prototype.addFrame = function (frame){
     this.frameList[this.frameList.length] = frame;
+    var point = new Point();
+    point.x = 0;
+    point.y = 0;
+    this.pos[this.pos.length] = point;
+    this.timeMs[this.timeMs.length] = 100;
+
 };
 
 /**
@@ -37,7 +47,7 @@ Sprite.prototype.getName = function(){
  */
 Sprite.prototype.replaceFrame = function(frame, n){
     if (this.frameList.length <= n) throw "The sprite not contains frame number "+n;
-    this.frameList[this.frameList.length] = frame;
+    this.frameList[n] = frame;
 };
 
 /**
@@ -47,6 +57,8 @@ Sprite.prototype.replaceFrame = function(frame, n){
 Sprite.prototype.delFrame = function(n){
     if (this.frameList.length <= n) throw "The sprite not contains frame number "+n;
     this.frameList.splice(n,n);
+    this.pos.splice(n,n);
+    this.timeMs.splice(n,n);
 };
 
 /**
@@ -80,9 +92,64 @@ Sprite.prototype.getFrame = function(n){
     return this.frameList[n];
 };
 
+Sprite.prototype.getMs = function(n){
+    if (this.timeMs.length <= n) throw "The sprite not contains frame number "+n;
+    return this.timeMs[n];
+};
+
+Sprite.prototype.getPositionFrame = function(n){
+    if (this.pos.length <= n) throw "The sprite not contains frame number "+n;
+    return this.pos[n];
+};
+
+Sprite.prototype.setMs = function(n, ms){
+    if (this.timeMs.length <= n) throw "The sprite not contains frame number "+n;
+    this.timeMs[n] = ms;
+};
+
+Sprite.prototype.setPositionFrame = function(n, pos){
+    if (this.pos.length <= n) throw "The sprite not contains frame number "+n;
+    this.pos[n].x = pos.x;
+    this.pos[n].y = pos.y;
+};
+
+Sprite.prototype.existsFrame = function(n){
+    if (this.frameList.length <= n) return false;
+    else return true;
+};
+
 /**
  *  metodo que resetea la animación al primer frame
  */
 Sprite.prototype.resetAnimation = function(){
     this.n = 0;
+};
+
+Sprite.prototype.paintAnimation = function(canvas){
+    if (this.frameList.length != 0){
+        this.canvasAnimation = canvas;
+        this.doPaintAnimation();
+    }
+};
+
+Sprite.prototype.doPaintAnimation = function(){
+    if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);
+    var ctx = this.canvasAnimation.getContext('2d');
+    if (this.n >= this.frameList.length) {
+        this.n = 0;
+    }
+    var fr = this.frameList[this.n];
+    var time = this.timeMs[this.n];
+    var position = this.pos[this.n];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(position.x, position.y);
+    ctx.drawImage(fr.getImageFrame(), 0, 0);
+    ctx.restore();
+    this.n = this.n + 1;
+    this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
+};
+
+Sprite.prototype.stopAnimation = function(){
+    clearTimeout(this.timeAnimationInverval);
 };
