@@ -157,16 +157,21 @@ Sprite.prototype.doPaintAnimation = function(){
     if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);
     var ctx = this.canvasAnimation.getContext('2d');
     if (this.n >= this.frameList.length) this.n = 0;
-    this.paintNextFrame(ctx, this.n);
+    this.paintNextFrame(ctx, this.n, null);
     var time = this.timeMs[this.n];
     this.n = this.n+1;
     this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
 };
 
-Sprite.prototype.paintNextFrame = function(ctx, nFrame){
+Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency){
     var fr = this.frameList[nFrame];
     var position = this.pos[nFrame];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (transparency == null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }else{
+        ctx.fillStyle = transparency;
+        ctx.fillRect(0,0,canvas.width, canvas.height);
+    }
     ctx.save();
     ctx.translate(position.x, position.y);
     ctx.drawImage(fr.getImageFrame(), 0, 0);
@@ -193,7 +198,7 @@ Sprite.prototype.doPaintExportAnimation = function(){
     if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
     if (this.nExport < this.frameList.length){
         var ctx = this.canvasTmpExportAnimation.getContext('2d');
-        this.paintNextFrame(ctx, this.nExport);
+        this.paintNextFrame(ctx, this.nExport,"#00FF00");
         var time = this.timeMs[this.nExport];
         this.encoder.setDelay(time);
         this.encoder.addFrame(ctx);
@@ -215,6 +220,7 @@ Sprite.prototype.exportToGif = function(){
     this.nExport = 0;
     this.encoder = new GIFEncoder();
     this.encoder.setRepeat(0);
+    this.encoder.setTransparent(0x00FF00);
     this.encoder.setSize(this.maxWidth,this.maxHeight);
     this.encoder.start();
     this.doPaintExportAnimation();
