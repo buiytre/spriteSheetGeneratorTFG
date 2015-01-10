@@ -33,7 +33,7 @@ var isDownLeft = false;                 //Indica si el boton izquierdo esta puls
 var isDownRight = false;                //Indica si el boton derecho esta pulsado
 
 //********Control selection*****
-const MARGENSELECCION = 10;
+const MARGENSELECCION = 8;
 var selectionTL = new Point;
 selectionTL.reset();
 var selectionBR = new Point;
@@ -51,6 +51,8 @@ var imageSprAdj = new Image;
 var posSprAdj = new Point;
 var posFrame = new Point;
 var bTransparencyPreview = false;
+
+var busy = false;
 /**
  * Funcion que devuelve la posicion del raton en el canvas
  * @param cv
@@ -85,6 +87,103 @@ function doMouseDown(event){
             break;
     }
 }
+
+function invertSelectionTLBR(){
+    if (selectionTL.x > selectionBR.x){
+        var newSelectionTL = new Point();
+        var newSelectionBR = new Point();
+        newSelectionTL.x = selectionBR.x;
+        newSelectionTL.y = selectionTL.y;
+        newSelectionBR.x = selectionTL.x;
+        newSelectionBR.y = selectionBR.y;
+        selectionTL = newSelectionTL;
+        selectionBR = newSelectionBR;
+        if (selectionResizeLeft){
+            selectionResizeRight = true;
+            selectionResizeLeft = false;
+        }else{
+            selectionResizeRight = false;
+            selectionResizeLeft = true;
+        }
+    }
+    if (selectionTL.y > selectionBR.y){
+        var newSelectionTL = new Point();
+        var newSelectionBR = new Point();
+        newSelectionTL.x = selectionTL.x;
+        newSelectionTL.y = selectionBR.y;
+        newSelectionBR.x = selectionBR.x;
+        newSelectionBR.y = selectionTL.y;
+        selectionTL = newSelectionTL;
+        selectionBR = newSelectionBR;
+        if (selectionResizeTop){
+            selectionResizeBot = true;
+            selectionResizeTop = false;
+        }else{
+            selectionResizeBot = false;
+            selectionResizeTop = true;
+        }
+    }
+}
+
+function changeCursorMoveOrSelection(){
+    var selectionInside = false;
+    var rl = false;
+    var rr = false;
+    var rt = false;
+    var rb = false;
+
+    if (mousePos.x >= (selectionTL.x - MARGENSELECCION) && mousePos.x <= (selectionBR.x + MARGENSELECCION) && mousePos.y >= (selectionTL.y - MARGENSELECCION) && mousePos.y <= (selectionBR.y + MARGENSELECCION)){
+        selectionInside = true;
+    }
+
+    if (selectionInside) {
+        if (mousePos.x >= (selectionTL.x - MARGENSELECCION) && mousePos.x <= (selectionTL.x + MARGENSELECCION)) {
+            rl = true;
+        } else {
+            rl = false;
+        }
+        if (mousePos.x >= (selectionBR.x - MARGENSELECCION) && mousePos.x <= (selectionBR.x + MARGENSELECCION)) {
+            rr = true;
+        } else {
+            rr = false;
+        }
+        if (mousePos.y >= (selectionTL.y - MARGENSELECCION) && mousePos.y <= (selectionTL.y + MARGENSELECCION)) {
+            rt = true;
+        } else {
+            rt = false;
+        }
+        if (mousePos.y >= (selectionBR.y - MARGENSELECCION) && mousePos.y <= (selectionBR.y + MARGENSELECCION)) {
+            rb = true;
+        } else {
+            rb = false;
+        }
+
+        if (rl || rr || rt || rb) {
+            if (!busy) {
+                if ((rl || rr) && !rt && !rb) {
+                    $("body").css("cursor", "ew-resize");
+                } else if ((rt || rb) && !rr && !rl) {
+                    $("body").css("cursor", "ns-resize");
+                } else if ((rt && rl)) {
+                    $("body").css("cursor", "nw-resize");
+                } else if ((rt && rr)) {
+                    $("body").css("cursor", "ne-resize");
+                } else if ((rb && rl)) {
+                    $("body").css("cursor", "sw-resize");
+                } else if ((rb && rr)) {
+                    $("body").css("cursor", "se-resize");
+                }
+            }
+        } else {
+            $("body").css("cursor", "pointer");
+        }
+    }else{
+        if (!busy){
+            $("body").css("cursor", "default");
+        }
+    }
+}
+
 
 /**
  * Funcion que indica si el raton esta dentro de una seleccion o en un lateral (o si esta fuera de ella)
@@ -192,6 +291,8 @@ function doMouseMove(event) {
                     }
                     break;
                 case MOUSESELECTIONMODE:
+                    invertSelectionTLBR();
+                    changeCursorMoveOrSelection();
                     if (isDownLeft) {
                         if (selectionMove || selectionResize) {
                             var incrementX = (mousePos.x - startClickLeft.x);
@@ -570,6 +671,7 @@ function setMilisecondsBtn(){
 function exportAnimatedGifBtn(){
     var spr = sheet.getSpriteByName($("#spriteList").val());
     $("body").css("cursor", "wait");
+    busy = true;
     spr.exportToGif();
     setTimeout(function(){
         exportAnimatedGifDelay(spr);
@@ -582,11 +684,13 @@ function exportAnimatedGifDelay(spr){
     var resultData = spr.getResultGif();
     if (resultData == -1){
         $("body").css("cursor", "wait");
+        busy = true;
         setTimeout(function(){
             exportAnimatedGifDelay(spr);
         },1000);
     }else{
         $("body").css("cursor", "default");
+        busy = false;
         var link = document.createElement('a');
 
         link.setAttribute('download', $("#spriteList").val() + '.gif');
