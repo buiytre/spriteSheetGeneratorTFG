@@ -36,6 +36,16 @@ Spritesheet.prototype.createSprite = function(name){
     }
 };
 
+Spritesheet.prototype.deleteSprite = function(spriteName){
+    var found = false;
+    for (var i=0; i < this.spriteList.length && !found; i++){
+        if (this.spriteList[i].getName() == spriteName){
+            found = true;
+            this.spriteList.splice(i,1);
+        }
+    }
+};
+
 Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     //buscar el nombre del sprite y añadir el frame
     var found = false;
@@ -49,11 +59,11 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     }
 };
 
-Spritesheet.prototype.paintSpritePreview = function(spriteName, canvas) {
+Spritesheet.prototype.paintFrameSelection = function(spriteName, canvas) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
-        thisSprite.resetAnimation();
+        thisSprite.resetSelection();
         ctx.clearRect(0,0,canvas.width,canvas.height);
         var y = 0;
         while (thisSprite.hasNextFrame()){
@@ -73,7 +83,7 @@ Spritesheet.prototype.getSpriteSheet = function(){
     newCanvas.width = this.maxwidth;
     newCanvas.height = this.maxheight;
     for (var i=0; i < this.spriteList.length; i++){
-        this.spriteList[i].resetAnimation();
+        this.spriteList[i].resetSelection();
         while (this.spriteList[i].hasNextFrame()){
             var spr = this.spriteList[i].getNextFrame();
             var img = spr.getImageFrame();
@@ -83,6 +93,14 @@ Spritesheet.prototype.getSpriteSheet = function(){
         }
     }
     return newCanvas;
+};
+
+Spritesheet.prototype.existsSprite = function(spriteName){
+    if (this.getSpriteByName(spriteName) == null){
+        return false;
+    }else{
+        return true;
+    }
 };
 
 Spritesheet.prototype.getSpriteByName = function(spriteName){
@@ -101,14 +119,13 @@ Spritesheet.prototype.paintSelection = function(spriteName, mousePos,canvas) {
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
         var yIni = 0;
-        thisSprite.resetAnimation();
+        thisSprite.resetSelection();
         var found = false;
         while (thisSprite.hasNextFrame() && !found){
             var frameTmp = thisSprite.getNextFrame();
             var image = frameTmp.getImageFrame();
             var yEnd = yIni + image.height;
             if (mousePos.y <= yEnd && mousePos.y >= yIni && mousePos.x >= 0 && mousePos.x <= image.width){
-                //this.paintSpritePreview(spriteName, canvas);
                 ctx.strokeStyle = "#f00";
                 ctx.strokeRect(0, yIni, image.width, image.height);
                 found = true;
@@ -127,7 +144,7 @@ Spritesheet.prototype.getSelection = function(spriteName, mousePos){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
         var yIni = 0;
-        thisSprite.resetAnimation();
+        thisSprite.resetSelection();
         var found = false;
         while (thisSprite.hasNextFrame() && !found){
             var frameTmp = thisSprite.getNextFrame();
@@ -213,3 +230,20 @@ Spritesheet.prototype.paintAnimation = function(spriteName, canvas){
     }
 };
 
+Spritesheet.prototype.delFrame = function(spriteName, nFrame){
+    var thisSprite = this.getSpriteByName(spriteName);
+    if (thisSprite != null){
+        if (thisSprite.existsFrame(nFrame)){
+            thisSprite.delFrame(nFrame);
+        }
+    }
+};
+
+Spritesheet.prototype.getNumberFrames = function(spriteName){
+    var thisSprite = this.getSpriteByName(spriteName);
+    var n = 0;
+    if (thisSprite != null){
+        n = thisSprite.getNumberFrames();
+    }
+    return n;
+};

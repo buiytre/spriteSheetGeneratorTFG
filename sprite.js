@@ -19,6 +19,7 @@ var Sprite = function(name){
     this.maxWidth = 0;
     this.maxHeight = 0;
 
+    this.nAnimation = 0;
     this.canvasTmpExportAnimation = null;
     this.timeCanvasAnimToExport = null;
     this.nExport = 0;
@@ -39,6 +40,7 @@ Sprite.prototype.addFrame = function (frame){
     this.timeMs[this.timeMs.length] = 100;
     if (this.maxWidth < frame.width) this.maxWidth = frame.width;
     if (this.maxHeight < frame.height) this.maxHeight = frame.height;
+    this.nAnimation = 0;
 };
 
 /**
@@ -58,6 +60,7 @@ Sprite.prototype.replaceFrame = function(frame, n){
     if (this.frameList.length <= n) throw "The sprite not contains frame number "+n;
     this.frameList[n] = frame;
     this.recalculateMaxWidthHeight();
+    this.nAnimation = 0;
 };
 
 /**
@@ -66,10 +69,12 @@ Sprite.prototype.replaceFrame = function(frame, n){
  */
 Sprite.prototype.delFrame = function(n){
     if (this.frameList.length <= n) throw "The sprite not contains frame number "+n;
-    this.frameList.splice(n,n);
-    this.pos.splice(n,n);
-    this.timeMs.splice(n,n);
+    this.frameList.splice(n,1);
+    this.pos.splice(n,1);
+    this.timeMs.splice(n,1);
+    if (this.n == n) this.n = 0;
     this.recalculateMaxWidthHeight();
+    this.nAnimation = 0;
 };
 
 Sprite.prototype.recalculateMaxWidthHeight = function(){
@@ -143,7 +148,7 @@ Sprite.prototype.existsFrame = function(n){
  *  metodo que resetea la animación al primer frame
  */
 Sprite.prototype.resetAnimation = function(){
-    this.n = 0;
+    this.nAnimation = 0;
 };
 
 Sprite.prototype.paintAnimation = function(canvas){
@@ -153,14 +158,20 @@ Sprite.prototype.paintAnimation = function(canvas){
     }
 };
 
+Sprite.prototype.resetSelection = function(){
+    this.n = 0;
+};
+
 Sprite.prototype.doPaintAnimation = function(){
     if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);
     var ctx = this.canvasAnimation.getContext('2d');
-    if (this.n >= this.frameList.length) this.n = 0;
-    this.paintNextFrame(ctx, this.n, null);
-    var time = this.timeMs[this.n];
-    this.n = this.n+1;
-    this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
+    if (this.frameList.length > 0) {
+        if (this.nAnimation >= this.frameList.length) this.nAnimation = 0;
+        this.paintNextFrame(ctx, this.nAnimation, null);
+        var time = this.timeMs[this.n];
+        this.nAnimation = this.nAnimation + 1;
+        this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
+    }
 };
 
 Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency){
@@ -179,7 +190,7 @@ Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency){
 };
 
 Sprite.prototype.stopAnimation = function(){
-    clearTimeout(this.timeAnimationInverval);
+    if (this.timeAnimationInverval != null) clearInterval(this.timeAnimationInverval);
 };
 
 Sprite.prototype.getMaxWidth = function(){
@@ -231,4 +242,8 @@ Sprite.prototype.getResultGif = function(){
     var binary_gif = this.encoder.stream().getData();
     var data_url = 'data:image/gif;base64,'+encode64(binary_gif);
     return data_url;
+};
+
+Sprite.prototype.getNumberFrames = function(){
+    return this.frameList.length;
 };

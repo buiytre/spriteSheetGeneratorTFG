@@ -420,7 +420,7 @@ function pinta(){
             break;
         case FRAMETOSELECT:
             var spriteName =  $("#spriteList").val();
-            sheet.paintSpritePreview(spriteName,canvas);
+            sheet.paintFrameSelection(spriteName,canvas);
             break;
         case FRAMESELECTED:
             if (bTransparencyPreview){
@@ -575,10 +575,20 @@ function addFrameBtn(){
  */
 function addSpriteBtn(){
     var name = $("#spriteName").val();
-    if (sheet.createSprite(name)){
-        $("#spriteList").append('<option value="' + name + '">'+ name + '</option>');
+    name = name.trim();
+    if (name != '') {
+        if (sheet.existsSprite(name)){
+            alert("el nombre del sprite ya existe y no se ha podido crear");
+        }else {
+            if (sheet.createSprite(name)) {
+                $("#spriteList").append('<option value="' + name + '">' + name + '</option>');
+                $("#spriteName").val('');
+            } else {
+                alert("ha ocurrido un error interno en la aplicación");
+            }
+        }
     }else{
-        alert("el nombre del sprite ya existe y no se ha podido crear");
+        alert("debes introducir un nombre");
     }
 }
 
@@ -602,7 +612,6 @@ function downloadFile(text){
 
 function changePreview(){
     var spriteName = $("#spriteList").val();
-//    sheet.paintSpritePreview(spriteName,$("#previewSpriteCanvas").get(0));
     sheet.stopOldAnimation();
     sheet.paintAnimation(spriteName, $("#previewSpriteCanvas").get(0));
 }
@@ -696,6 +705,39 @@ function exportAnimatedGifDelay(spr){
         link.setAttribute('href', resultData);
         link.click();
         pinta();
+    }
+}
+
+function deleteSpriteBtn(){
+    if ($("#spriteList").prop("selectedIndex")  == -1) {
+        alert("Has de seleccionar un sprite antes");
+    }else {
+        var spriteName = $("#spriteList").val();
+        if (confirm('¿Seguro que quieres eliminar el sprite ' + spriteName + '?')) {
+            sheet.stopOldAnimation();
+            sheet.deleteSprite(spriteName);
+            $("#spriteList option[value='"+ spriteName +"']").remove();
+            $("#spriteList").prop("selectedIndex",-1);
+        }
+    }
+}
+
+function deleteFrameBtn(){
+    var selectedSprite = $("#spriteList").val();
+    if (selectedSprite == null || selectedFrame == -1){
+        alert("Has de seleccionar un frame de un sprite antes");
+    }else{
+        if (confirm('¿seguro que quieres eliminar el frame ' + selectedFrame + ' del sprite ' + selectedSprite +'?')){
+            sheet.stopOldAnimation();
+            sheet.delFrame(selectedSprite,selectedFrame);
+            if (sheet.getNumberFrames(selectedSprite) > 0){
+                modeCanvas = FRAMETOSELECT;
+                sheet.paintAnimation(selectedSprite,$("#previewSpriteCanvas").get(0));
+            }else{
+                modeCanvas = IMPORTEDIMAGE;
+            }
+            pinta();
+        }
     }
 }
 

@@ -93,7 +93,16 @@
             <input type="button" onclick="addSpriteBtn()" value = "Añadir sprite" />
         </p>
         <p><select id="spriteList" name="spriteList" size="10" onchange="changePreview();"></select></p>
-
+        <p>
+            <button type="button" class="btn btn-primary" onclick="deleteSpriteBtn()" >
+                Eliminar sprite
+            </button>
+        </p>
+        <p>
+            <button type="button" class="btn btn-primary" onclick="deleteFrameBtn()" >
+                Eliminar frame
+            </button>
+        </p>
         <p>
             Animación:<br />
             <canvas id="previewSpriteCanvas"></canvas>
