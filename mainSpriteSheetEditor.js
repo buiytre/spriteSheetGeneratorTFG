@@ -73,6 +73,12 @@ function doMouseDown(event){
         case 1:
             startClickLeft = getMousePos(canvas, event);
             isDownLeft = true;
+            switch (modeCanvas){
+                case FRAMETOSELECT:
+                    selectFrame();
+                    break;
+            }
+
             break;
         case 3:
             startClickRight = getMousePos(canvas,event);
@@ -238,11 +244,6 @@ function doMouseUp(event){
         case 1:
 //            endClickLeft = getMousePos(canvas, event);
             isDownLeft = false;
-            switch (modeCanvas){
-                case FRAMETOSELECT:
-                    selectFrame();
-                    break;
-            }
             break;
         case 3:
 //            endClickRight = getMousePos(canvas,event);
@@ -254,6 +255,7 @@ function doMouseUp(event){
 }
 
 function selectFrame(){
+    selectedFrame = sheet.getSelection($("#spriteList").val(), mousePos);
     if (selectedFrame != -1){
         posSprAdj.x = 0;
         posSprAdj.y = 0;
@@ -332,10 +334,7 @@ function doMouseMove(event) {
             break;
         case FRAMETOSELECT:
             pinta();
-            var frameSelected = sheet.paintSelection($("#spriteList").val(), mousePos, canvas);
-            if (isDownLeft) {
-                selectedFrame = frameSelected;
-            }
+            sheet.paintSelection($("#spriteList").val(), mousePos, canvas);
             break;
         case FRAMESELECTED:
             if (isDownLeft){
