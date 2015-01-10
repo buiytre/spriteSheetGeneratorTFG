@@ -212,3 +212,4 @@ Spritesheet.prototype.paintAnimation = function(spriteName, canvas){
         thisSprite.paintAnimation(canvas);
     }
 };
+

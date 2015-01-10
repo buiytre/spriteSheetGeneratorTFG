@@ -4,18 +4,14 @@ var nullFunction = function(event){
 };
 
 //*******MODES PROGRAMA
-var canvasMode = 0;
+var modeCanvas = 0;     //indica en que modo esta trabajando el canvas
 const IMPORTEDIMAGE = 1;
 const FRAMETOSELECT = 2;
 const FRAMESELECTED = 3;
 
-var MODEFRAME = 0;
+var modeFrame = 0;      // indica si el canvas esta trabajando para ajustar los frames a la animación o para editarlos
 const MODEADJUST = 1;
 const MODEEDIT = 2;
-//const EDITFRAMEMODE_SPRSELECT = 2;
-//const EDITFRAMEMODE_SPRITESELECTED = 3;
-//const ADJUSTFRAMEMODE_SPRSELECT = 4;
-//const ADJUSTFRAMEMODE_SPRITESELECTED = 5;
 /**************************************************/
 var canvas;     //canvas central
 var ctx;        //ctx para el canvas central
@@ -143,7 +139,7 @@ function doMouseUp(event){
         case 1:
 //            endClickLeft = getMousePos(canvas, event);
             isDownLeft = false;
-            switch (canvasMode){
+            switch (modeCanvas){
                 case FRAMETOSELECT:
                     selectFrame();
                     break;
@@ -169,7 +165,7 @@ function selectFrame(){
         posFrame.x = p.x;
         posFrame.y = p.y;
         mouseMode = MOUSEMOVEMODE;
-        canvasMode = FRAMESELECTED;
+        modeCanvas = FRAMESELECTED;
     }
     pinta();
     pintaSelection();
@@ -184,7 +180,7 @@ function selectFrame(){
 function doMouseMove(event) {
     mousePos = getMousePos(canvas, event);
     $("#coords").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
-    switch (canvasMode) {
+    switch (modeCanvas) {
         case IMPORTEDIMAGE:
             switch (mouseMode) {
                 case MOUSEMOVEMODE:
@@ -242,7 +238,7 @@ function doMouseMove(event) {
             break;
         case FRAMESELECTED:
             if (isDownLeft){
-                switch (MODEFRAME){
+                switch (modeFrame){
                     case MODEEDIT:
                         posSprAdj.x = posSprAdj.x + (mousePos.x - startClickLeft.x);
                         posSprAdj.y = posSprAdj.y + (mousePos.y - startClickLeft.y);
@@ -266,7 +262,7 @@ function doMouseMove(event) {
  */
 function pintaSelection() {
     ctx.save();
-    switch (canvasMode){
+    switch (modeCanvas){
         case IMPORTEDIMAGE:
             if (selectionTL.defined() && selectionBR.defined()) {
                 ctx.fillStyle = 'rgba(255,0,0,0.1)';
@@ -315,7 +311,7 @@ function pintaTransparency(){
 function pinta(){
     clear();
     ctx.save();
-    switch (canvasMode){
+    switch (modeCanvas){
         case IMPORTEDIMAGE:
             ctx.translate(canvas.width/2,canvas.height/2);
             ctx.translate(posImage.x, posImage.y);
@@ -398,7 +394,7 @@ window.onload= function(){
         var url = URL.createObjectURL(file);
         img.onload = function(){
             loadImage();
-            canvasMode = IMPORTEDIMAGE;
+            modeCanvas = IMPORTEDIMAGE;
             pinta();
             pintaSelection();
         };
@@ -418,7 +414,7 @@ window.onload= function(){
 function loadImage(){
     currentScale = 1;
     mouseMode = MOUSEMOVEMODE;
-    canvasMode = IMPORTEDIMAGE;
+    modeCanvas = IMPORTEDIMAGE;
     posImage = new Point(0,0);
    // clear();
     pinta();
@@ -507,7 +503,7 @@ function downloadFile(text){
 function changePreview(){
     var spriteName = $("#spriteList").val();
 //    sheet.paintSpritePreview(spriteName,$("#previewSpriteCanvas").get(0));
-    sheet.stopO
+    sheet.stopOldAnimation();
     sheet.paintAnimation(spriteName, $("#previewSpriteCanvas").get(0));
 }
 
@@ -522,14 +518,14 @@ function transparencyBtn(){
 }
 
 function adjustFrameBtn(){
-    canvasMode = FRAMETOSELECT;
-    MODEFRAME = MODEADJUST;
+    modeCanvas = FRAMETOSELECT;
+    modeFrame = MODEADJUST;
     pinta();
 }
 
 function editFrameBtn(){
-    canvasMode = FRAMETOSELECT;
-    MODEFRAME = MODEEDIT;
+    modeCanvas = FRAMETOSELECT;
+    modeFrame = MODEEDIT;
     pinta();
 }
 
@@ -570,10 +566,36 @@ function setMilisecondsBtn(){
         alert("El numero de milisegundos no es un numero");
     }
 }
+
+function exportAnimatedGifBtn(){
+    var spr = sheet.getSpriteByName($("#spriteList").val());
+    spr.exportToGif();
+    setTimeout(function(){
+        exportAnimatedGifDelay(spr);
+    },1000);
+/*
+*/
+}
+
+function exportAnimatedGifDelay(spr){
+    var resultData = spr.getResultGif();
+    if (resultData == -1){
+        setTimeout(function(){
+            exportAnimatedGifDelay(spr);
+        },1000);
+    }else{
+        var link = document.createElement('a');
+
+        link.setAttribute('download', $("#spriteList").val() + '.gif');
+        link.setAttribute('href', resultData);
+        link.click();
+    }
+}
+
 /*
 function resizeCanvas(canvas, width, height){
     var newCanvas = document.createElement("canvas");
-    newCanvas.width = canvas.width;
+    newCanvas.width =   canvas.width;
     newCanvas.height = canvas.height;
     newCanvas.getContext("2d").drawImage(canvas,0,0);
 

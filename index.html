@@ -10,6 +10,11 @@
     <script src="frame.js"></script>
     <script src="mainSpriteSheetEditor.js"></script>
     <script src="spritesheet.js"></script>
+
+    <script type="text/javascript" src="jsgif/LZWEncoder.js"></script>
+    <script type="text/javascript" src="jsgif/NeuQuant.js"></script>
+    <script type="text/javascript" src="jsgif/GIFEncoder.js"></script>
+    <script type="text/javascript" src="jsgif/b64.js"></script>
 </head>
 <body>
 <div id="contenedor">
@@ -21,6 +26,9 @@
             </button>
             <button type="button" class="btn btn-primary" onclick="downloadFile('test')" >
                 Test Descarga csv
+            </button>
+            <button type="button" class="btn btn-primary" onclick="exportAnimatedGifBtn()">
+                Exportar Gif Seleccionado
             </button>
             <input type="file" id="imagen" name="imagen" />
         </p>

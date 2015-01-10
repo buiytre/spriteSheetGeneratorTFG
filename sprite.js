@@ -16,6 +16,17 @@ var Sprite = function(name){
     this.name = name;
     this.timeAnimationInverval = null;
     this.canvasAnimation = null;
+    this.maxWidth = 0;
+    this.maxHeight = 0;
+    this.minInterval = 100;
+
+    this.canvasTmpExportAnimation = null;
+    this.timeCanvasAnimToExport = null;
+    this.timeEncoderToExport = null;
+    this.nExport = 0;
+    this.finishedLoop = false;
+    this.encoder = null;
+    this.encoderEnd = false;
 };
 
 /**
@@ -29,7 +40,8 @@ Sprite.prototype.addFrame = function (frame){
     point.y = 0;
     this.pos[this.pos.length] = point;
     this.timeMs[this.timeMs.length] = 100;
-
+    if (this.maxWidth < frame.width) this.maxWidth = frame.width;
+    if (this.maxHeight < frame.height) this.maxHeight = frame.height;
 };
 
 /**
@@ -48,6 +60,7 @@ Sprite.prototype.getName = function(){
 Sprite.prototype.replaceFrame = function(frame, n){
     if (this.frameList.length <= n) throw "The sprite not contains frame number "+n;
     this.frameList[n] = frame;
+    this.recalculateMaxWidthHeight();
 };
 
 /**
@@ -59,6 +72,24 @@ Sprite.prototype.delFrame = function(n){
     this.frameList.splice(n,n);
     this.pos.splice(n,n);
     this.timeMs.splice(n,n);
+    this.recalculateMaxWidthHeight();
+    this.recalculateMinInterval();
+};
+
+Sprite.prototype.recalculateMaxWidthHeight = function(){
+    this.maxWidth = 0;
+    this.maxHeight = 0;
+    for (var i=0; i < this.frameList.length; i++){
+        if (this.maxWidth < this.frameList[i].width) this.maxWidth = this.frameList[i].width;
+        if (this.maxHeight < this.frameList[i].height) this.maxHeight = this.frameList[i].height;
+    }
+};
+
+Sprite.prototype.recalculateMinInterval = function(){
+    this.minInterval = this.timeMs[0];
+    for (var i = 1; i < this.timeMs.length; i++){
+        if (this.timeMs[i] < this.minInterval) this.minInterval = this.timeMs[i];
+    }
 };
 
 /**
@@ -105,6 +136,7 @@ Sprite.prototype.getPositionFrame = function(n){
 Sprite.prototype.setMs = function(n, ms){
     if (this.timeMs.length <= n) throw "The sprite not contains frame number "+n;
     this.timeMs[n] = ms;
+    this.recalculateMinInterval();
 };
 
 Sprite.prototype.setPositionFrame = function(n, pos){
@@ -135,21 +167,87 @@ Sprite.prototype.paintAnimation = function(canvas){
 Sprite.prototype.doPaintAnimation = function(){
     if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);
     var ctx = this.canvasAnimation.getContext('2d');
-    if (this.n >= this.frameList.length) {
-        this.n = 0;
-    }
-    var fr = this.frameList[this.n];
+    if (this.n >= this.frameList.length) this.n = 0;
+    this.paintNextFrame(ctx, this.n);
     var time = this.timeMs[this.n];
-    var position = this.pos[this.n];
+    this.n = this.n+1;
+    this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
+};
+
+Sprite.prototype.paintNextFrame = function(ctx, nFrame){
+    var fr = this.frameList[nFrame];
+    var position = this.pos[nFrame];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(position.x, position.y);
     ctx.drawImage(fr.getImageFrame(), 0, 0);
     ctx.restore();
-    this.n = this.n + 1;
-    this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
 };
 
 Sprite.prototype.stopAnimation = function(){
     clearTimeout(this.timeAnimationInverval);
+};
+
+Sprite.prototype.getMaxWidth = function(){
+    return this.maxWidth;
+};
+
+Sprite.prototype.getMaxHeight = function(){
+    return this.maxHeight;
+};
+
+Sprite.prototype.stopExportToGif = function(){
+    if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
+    if (this.timeEncoderToExport != null) clearInterval(this.timeEncoderToExport);
+};
+
+Sprite.prototype.doPaintExportAnimation = function(){
+    if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
+    var ctx = this.canvasTmpExportAnimation.getContext('2d');
+    if (this.nExport < this.frameList.length){
+        this.paintNextFrame(ctx, this.nExport);
+        var time = this.timeMs[this.nExport];
+        this.encoder.addFrame(ctx);
+        this.nExport = this.nExport + 1;
+        this.timeCanvasAnimToExport = setTimeout(this.doPaintExportAnimation.bind(this),time);
+    }else{
+        this.finishedLoop = true;
+    }
+};
+
+Sprite.prototype.doEncoderExportAnimation = function(){
+    if (!this.finishedLoop){
+        var ctx = this.canvasTmpExportAnimation.getContext('2d');
+        this.encoder.addFrame(ctx);
+    }else{
+        this.encoder.finish();
+        this.encoderEnd = true;
+        this.stopExportToGif();
+    }
+};
+
+Sprite.prototype.exportToGif = function(){
+    this.canvasTmpExportAnimation = document.createElement("canvas");
+    this.canvasTmpExportAnimation.width = this.maxWidth;
+    this.canvasTmpExportAnimation.height = this.maxHeight;
+    this.finishedLoop = false;
+    this.encoderEnd = false;
+    this.stopExportToGif();
+    this.nExport = 0;
+
+    this.encoder = new GIFEncoder();
+    this.encoder.setRepeat(0);
+    this.encoder.setDelay(this.minInterval); //go to next frame every n milliseconds
+    this.encoder.setSize(this.maxWidth,this.maxHeight);
+    this.encoder.start();
+
+    this.timeEncoderToExport = setInterval(this.doEncoderExportAnimation.bind(this),this.minInterval);
+    this.doPaintExportAnimation();
+};
+
+Sprite.prototype.getResultGif = function(){
+    if (!this.encoderEnd) return -1;
+    var binary_gif = this.encoder.stream().getData(); //notice this is different from the as3gif package!
+    var data_url = 'data:image/gif;base64,'+encode64(binary_gif);
+    return data_url;
 };
