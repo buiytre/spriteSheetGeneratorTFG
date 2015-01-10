@@ -569,10 +569,11 @@ function setMilisecondsBtn(){
 
 function exportAnimatedGifBtn(){
     var spr = sheet.getSpriteByName($("#spriteList").val());
+    $("body").css("cursor", "wait");
     spr.exportToGif();
     setTimeout(function(){
         exportAnimatedGifDelay(spr);
-    },1000);
+    },500);
 /*
 */
 }
@@ -580,15 +581,18 @@ function exportAnimatedGifBtn(){
 function exportAnimatedGifDelay(spr){
     var resultData = spr.getResultGif();
     if (resultData == -1){
+        $("body").css("cursor", "wait");
         setTimeout(function(){
             exportAnimatedGifDelay(spr);
         },1000);
     }else{
+        $("body").css("cursor", "default");
         var link = document.createElement('a');
 
         link.setAttribute('download', $("#spriteList").val() + '.gif');
         link.setAttribute('href', resultData);
         link.click();
+        pinta();
     }
 }
 
