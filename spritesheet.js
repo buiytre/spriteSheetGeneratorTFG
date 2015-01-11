@@ -251,3 +251,32 @@ Spritesheet.prototype.getNumberFrames = function(spriteName){
     }
     return n;
 };
+
+Spritesheet.prototype.getClanLibXML = function(){
+    var text = "";
+    text = '<?xml version="1.0" encoding="iso-8859-1"?>\r\n';
+    text = text +'<resources>\r\n';
+    var x = 0;
+    for (var i = 0; i < this.spriteList.length; i++){
+        text = text +'    <sprite name="'+this.spriteList[i].name+'">\r\n';
+        text = text +'        <image file="spriteSheet.png">\r\n';
+        for (var j=0; j < this.spriteList[i].getNumberFrames(); j++){
+            var fr = this.spriteList[i].getFrame(j);
+            text = text +'             <grid pos="'+x+',0" size="'+fr.width +','+fr.height+'" array="1,1" />\r\n';
+            x = x + fr.width;
+        }
+        text = text +'        </image>\r\n';
+        for (var j=0; j < this.spriteList[i].getNumberFrames(); j++) {
+            var pos = this.spriteList[i].getPositionFrame(j);
+            var timeMs = this.spriteList[i].getMs(j);
+            text = text + '        <frame nr='+ j + ' speed="' + timeMs +'" x="'+ pos.x + '" y="'+pos.y + '"/>\r\n';
+        }
+        text = text +'        <animation speed="200" loop="yes" pingpong="no" />\r\n';
+        text = text +'    </sprite>\r\n';
+    }
+    text = text +'</resources>\r\n';
+
+    text = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
+    return text;
+
+}

@@ -606,12 +606,13 @@ function exportSheetBtn(){
 //    window.open(dataURL);
 }
 
-function downloadFile(text){
+function downloadClanLibXMLbtn(){
+    var data = sheet.getClanLibXML();
     var link = document.createElement('a');
-    mimeType = 'text/plain';
 
-    link.setAttribute('download', 'test.csv');
-    link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent(text));
+
+    link.setAttribute('download', 'resources.xml');
+    link.setAttribute('href', data);
     link.click();
 
 }
