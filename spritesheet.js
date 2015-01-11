@@ -12,6 +12,8 @@ var Spritesheet = function(){
     this.spriteList = new Array();
     this.maxwidth = 0;
     this.maxheight = 0;
+    this.frameMaxWidth = 0;
+    this.frameMaxHeight = 0;
     this.oldAnimation = -1;
 };
 
@@ -55,6 +57,8 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
             found = true;
             this.maxwidth = this.maxwidth + frame.width;
             this.maxheight = this.maxheight + frame.height;
+            if (frame.width > this.frameMaxWidth) this.frameMaxWidth = frame.width;
+            if (frame.height > this.frameMaxHeight) this.frameMaxHeight = frame.height;
         }
     }
 };
@@ -81,15 +85,15 @@ Spritesheet.prototype.getSpriteSheet = function(){
     var w = 0;
     var h = 0;
     newCanvas.width = this.maxwidth;
-    newCanvas.height = this.maxheight;
+    newCanvas.height = this.frameMaxHeight;
     for (var i=0; i < this.spriteList.length; i++){
         this.spriteList[i].resetSelection();
         while (this.spriteList[i].hasNextFrame()){
-            var spr = this.spriteList[i].getNextFrame();
-            var img = spr.getImageFrame();
+            var fr = this.spriteList[i].getNextFrame();
+            var img = fr.getImageFrame();
             ctx.drawImage(img,w,h);
             w = w + img.width;
-            h = h + img.height;
+//            h = h + img.height;
         }
     }
     return newCanvas;

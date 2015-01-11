@@ -527,6 +527,7 @@ function selectionModeBtn() {
     selectionTL.reset();
     selectionBR.reset();
     mouseMode = MOUSESELECTIONMODE;
+    modeCanvas = IMPORTEDIMAGE;
     pinta();
 }
 
@@ -596,8 +597,13 @@ function addSpriteBtn(){
  * click del boton que descarga el spritesheet
  */
 function exportSheetBtn(){
-    var dataURL = sheet.getSpriteSheet().toDataURL();
-    window.open(dataURL);
+    var data = sheet.getSpriteSheet().toDataURL();
+    var link = document.createElement('a');
+
+    link.setAttribute('download', 'spriteSheet.png');
+    link.setAttribute('href', data);
+    link.click();
+//    window.open(dataURL);
 }
 
 function downloadFile(text){
