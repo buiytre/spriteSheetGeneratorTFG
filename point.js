@@ -3,11 +3,6 @@ var Point = function(x, y){
     this.y = y;
 };
 
-var Point = function(){
-    this.x = 0;
-    this.y = 0;
-};
-
 Point.prototype.x = function(x){
     this.x = x;
 };

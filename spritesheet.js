@@ -266,12 +266,12 @@ Spritesheet.prototype.getClanLibXML = function(){
             x = x + fr.width;
         }
         text = text +'        </image>\r\n';
+        text = text +'        <animation speed="200" loop="yes" pingpong="no" />\r\n';
         for (var j=0; j < this.spriteList[i].getNumberFrames(); j++) {
             var pos = this.spriteList[i].getPositionFrame(j);
             var timeMs = this.spriteList[i].getMs(j);
             text = text + '        <frame nr='+ j + ' speed="' + timeMs +'" x="'+ pos.x + '" y="'+pos.y + '"/>\r\n';
         }
-        text = text +'        <animation speed="200" loop="yes" pingpong="no" />\r\n';
         text = text +'    </sprite>\r\n';
     }
     text = text +'</resources>\r\n';

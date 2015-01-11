@@ -3,6 +3,14 @@ var nullFunction = function(event){
     event.preventDefault();
 };
 
+const IMGDATARED = 0;
+const IMGDATAGREEN = 1;
+const IMGDATABLUE = 2;
+const IMGDATAALPHA = 3;
+
+var transparentColor = false;
+var puntosVisitados = null;
+var imageDataPixels;
 //*******MODES PROGRAMA
 var modeCanvas = 0;     //indica en que modo esta trabajando el canvas
 const IMPORTEDIMAGE = 1;
@@ -254,6 +262,22 @@ function doMouseUp(event){
     }
 }
 
+function doMouseDblClick(event){
+    switch (event.which){
+    case 1:
+        switch (modeCanvas){
+            case IMPORTEDIMAGE:
+                if (transparentColor){
+                    getSelectionAroundPoint(mousePos);
+                    pinta();
+                    pintaSelection();
+                }
+                break;
+        }
+        break;
+    }
+}
+
 function selectFrame(){
     selectedFrame = sheet.getSelection($("#spriteList").val(), mousePos);
     if (selectedFrame != -1){
@@ -477,16 +501,22 @@ window.onload= function(){
     ctx = canvas.getContext('2d');
     canvas.width = $('#preview').width();
     canvas.height = $('#preview').height();
+    tranparencyMatrix = _.range(canvas.width).map(function(){
+        return _.range(canvas.height).map(function(){
+            return true;
+        });
+    });
     canvas.addEventListener('click',nullFunction,false);
     canvas.addEventListener('contextmenu',nullFunction,false);
     canvas.addEventListener('mousedown', nullFunction, false);
     canvas.addEventListener('mouseup', nullFunction, false);
     canvas.addEventListener('mousemove', nullFunction, false);
+    canvas.addEventListener('dblclick', nullFunction, false);
 
     canvas.addEventListener('mousedown', doMouseDown, false);
     canvas.addEventListener('mouseup', doMouseUp, false);
     canvas.addEventListener('mousemove', doMouseMove, false);
-
+    canvas.addEventListener('dblclick', doMouseDblClick, false);
     var inputFile = document.getElementById("imagen");
     inputFile.addEventListener('change', function (event) {
         var file = event.target.files[0];
@@ -503,6 +533,9 @@ window.onload= function(){
     $(window).resize(function(){
         canvas.with = $('#preview').width();
         canvas.height = $('#preview').height();
+        pinta();
+        pintaSelection();
+        imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
     });
     sheet = new Spritesheet();
 };
@@ -518,6 +551,36 @@ function loadImage(){
     posImage = new Point(0,0);
    // clear();
     pinta();
+    transparentColor = false;
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+    detectTransparentColor();
+}
+
+
+function detectTransparentColor(){
+    var canv = document.createElement("canvas");
+    canv.width = img.width;
+    canv.height = img.height;
+    var cnt = canv.getContext('2d');
+    cnt.drawImage(img,0,0,canv.width,canv.height);
+    var imageTransParentData = ctx.getImageData(0,0,canv.width,canv.height);
+    for (var x=0; x<imageTransParentData.width && !transparentColor; x++){
+        for (var y=0; y<imageTransParentData.height && !transparentColor; y++){
+            var pixelCoord = x*4+y*imageTransParentData.width*4;
+            if (imageTransParentData.data[pixelCoord+IMGDATAALPHA] == 0){
+                transparentColor = true;
+            }
+         }
+    }
+}
+
+function isTransparent(x,y){
+    var pixelCoord = x*4+y*imageDataPixels.width*4;
+    if (imageDataPixels.data[pixelCoord+IMGDATAALPHA] == 0){
+        return true;
+    }else{
+        return false;
+    }
 }
 
 /**
@@ -748,6 +811,67 @@ function deleteFrameBtn(){
     }
 }
 
+function getSelectionAroundPoint(point){
+    puntosVisitados = _.range(canvas.width).map(function(){
+        return _.range(canvas.height).map(function(){
+            return false;
+        });
+    });
+    point.x = Math.round(point.x);
+    point.y = Math.round(point.y);
+    markPixel(point.x, point.y,true);
+    var minX = point.x - 1;
+    var maxX = point.x + 1;
+    var minY = point.y - 1;
+    var maxY = point.y + 1;
+
+    var finish = false;
+    while (!finish){
+        finish = true;
+        for (var y = minY; y <= maxY; y++){
+            for (var x = minX; x <= maxX; x++){
+                if (!pixelIsMarked(x,y) && !isTransparent(x,y) && isNeighbourOfMarkedPixel(x,y)){
+                    if (markPixel(x,y,true)){
+                        finish = false;
+                        if (x - 1 < minX) minX = x - 1;
+                        if (x + 1 > maxX) maxX = x + 1;
+                        if (y - 1 < minY) minY = y - 1;
+                        if (y + 1 > maxY) maxY = y + 1;
+                    }
+                }
+            }
+        }
+    }
+    selectionTL.x = minX;
+    selectionTL.y = minY;
+    selectionBR.x = maxX;
+    selectionBR.y = maxY;
+}
+
+
+function pixelIsMarked(x,y){
+    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+        return false;
+    }
+    return puntosVisitados[x][y];
+}
+
+function isNeighbourOfMarkedPixel(x,y){
+    return (
+           pixelIsMarked(x - 1,y)
+        || pixelIsMarked(x + 1,y)
+        || pixelIsMarked(x, y - 1)
+        || pixelIsMarked(x, y + 1)
+    );
+}
+
+function markPixel(x,y, value){
+    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+        return false;
+    }
+    puntosVisitados[x][y] = value;
+    return true;
+}
 /*
 function resizeCanvas(canvas, width, height){
     var newCanvas = document.createElement("canvas");
