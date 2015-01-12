@@ -116,6 +116,15 @@ Spritesheet.prototype.getSpriteByName = function(spriteName){
     return null;
 };
 
+Spritesheet.prototype.getPositionSpriteByName = function(spriteName){
+    for (var i=0; i < this.spriteList.length; i++){
+        if (this.spriteList[i].getName() == spriteName){
+            return i;
+        }
+    }
+    return null;
+};
+
 Spritesheet.prototype.paintSelection = function(spriteName, mousePos,canvas) {
     var ctx = canvas.getContext('2d');
     var spriteSelected = -1;
@@ -222,15 +231,17 @@ Spritesheet.prototype.modifyFrameN = function(spriteName, nframe, frame){
 
 Spritesheet.prototype.stopOldAnimation = function(){
     if (this.oldAnimation != -1){
-        this.spriteList[this.oldAnimation.stopAnimation()];
+        this.spriteList[this.oldAnimation].stopAnimation();
         this.oldAnimation = -1;
     }
 };
 
 Spritesheet.prototype.paintAnimation = function(spriteName, canvas){
-    var thisSprite = this.getSpriteByName(spriteName);
+    var thisSprite = this.getPositionSpriteByName(spriteName);
     if (thisSprite != null){
-        thisSprite.paintAnimation(canvas);
+        this.stopOldAnimation();
+        this.oldAnimation = thisSprite;
+        this.spriteList[thisSprite].paintAnimation(canvas);
     }
 };
 

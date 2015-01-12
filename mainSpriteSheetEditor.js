@@ -587,11 +587,12 @@ function isTransparent(x,y){
  * click en el boton de seleccion inicializa el modo seleccion
  */
 function selectionModeBtn() {
-    selectionTL.reset();
-    selectionBR.reset();
+//    selectionTL.reset();
+//    selectionBR.reset();
     mouseMode = MOUSESELECTIONMODE;
     modeCanvas = IMPORTEDIMAGE;
     pinta();
+    pintaSelection();
 }
 
 /**
@@ -647,6 +648,7 @@ function addSpriteBtn(){
             if (sheet.createSprite(name)) {
                 $("#spriteList").append('<option value="' + name + '">' + name + '</option>');
                 $("#spriteName").val('');
+                $("#spriteList").val(name);
             } else {
                 alert("ha ocurrido un error interno en la aplicación");
             }
@@ -738,9 +740,10 @@ function saveAdjustedFrameBtn(){
 function setMilisecondsBtn(){
     var numberMiliseconds = $("#milisecondsText").val();
     if ($.isNumeric(numberMiliseconds)){
-        sheet.setMs($("#spriteList").val(),selectedFrame,numberMiliseconds);
         sheet.stopOldAnimation();
+        sheet.setMs($("#spriteList").val(),selectedFrame,numberMiliseconds);
         sheet.paintAnimation($("#spriteList").val(),$("#previewSpriteCanvas").get(0));
+        alert('Numero de milisegundos del frame fijado a ' + numberMiliseconds);
     }else{
         alert("El numero de milisegundos no es un numero");
     }

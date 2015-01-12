@@ -155,6 +155,9 @@ Sprite.prototype.paintAnimation = function(canvas){
     if (this.frameList.length != 0){
         this.canvasAnimation = canvas;
         this.doPaintAnimation();
+    }else{
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width,canvas.height);
     }
 };
 
@@ -168,7 +171,7 @@ Sprite.prototype.doPaintAnimation = function(){
     if (this.frameList.length > 0) {
         if (this.nAnimation >= this.frameList.length) this.nAnimation = 0;
         this.paintNextFrame(ctx, this.nAnimation, null);
-        var time = this.timeMs[this.n];
+        var time = this.timeMs[this.nAnimation];
         this.nAnimation = this.nAnimation + 1;
         this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
     }
