@@ -524,7 +524,6 @@ window.onload= function(){
         var url = URL.createObjectURL(file);
         img.onload = function(){
             loadImage();
-            modeCanvas = IMPORTEDIMAGE;
             pinta();
             pintaSelection();
         };
@@ -546,7 +545,7 @@ window.onload= function(){
  */
 function loadImage(){
     currentScale = 1;
-    mouseMode = MOUSEMOVEMODE;
+    mouseMode = MOUSESELECTIONMODE;
     modeCanvas = IMPORTEDIMAGE;
     posImage = new Point(0,0);
    // clear();
