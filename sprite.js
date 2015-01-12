@@ -170,25 +170,42 @@ Sprite.prototype.doPaintAnimation = function(){
     var ctx = this.canvasAnimation.getContext('2d');
     if (this.frameList.length > 0) {
         if (this.nAnimation >= this.frameList.length) this.nAnimation = 0;
-        this.paintNextFrame(ctx, this.nAnimation, null);
+        this.paintNextFrame(ctx, this.nAnimation, null, this.canvasAnimation);
         var time = this.timeMs[this.nAnimation];
         this.nAnimation = this.nAnimation + 1;
         this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
     }
 };
 
-Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency){
+Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency, canvas){
     var fr = this.frameList[nFrame];
     var position = this.pos[nFrame];
-    if (transparency == null) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (transparency == null){
+        ctx.translate(position.x, position.y);
+        ctx.drawImage(fr.getImageFrame(), 0, 0);
     }else{
+        var canvas2 = document.createElement("canvas");
+        canvas2.width = canvas.width;
+        canvas2.height= canvas.height;
+        var ctx2 = canvas2.getContext('2d');
+        ctx2.drawImage(fr.getImageFrame(),0,0);
+        var imageData = ctx2.getImageData(0,0,canvas2.width,canvas2.height);
+        for (var i=0;i < imageData.data.length; i=i+4){
+            if (imageData.data[i+3] < (255/2)){
+                imageData.data[i+3] = 0;
+            }else{
+                imageData.data[i+3] = 255;
+            }
+        }
+        ctx2.clearRect(0,0,canvas2.width,canvas2.height);
+        ctx2.putImageData(imageData,0,0);
         ctx.fillStyle = transparency;
         ctx.fillRect(0,0,canvas.width, canvas.height);
+        ctx.translate(position.x,position.y);
+        ctx.drawImage(canvas2,0,0);
     }
-    ctx.save();
-    ctx.translate(position.x, position.y);
-    ctx.drawImage(fr.getImageFrame(), 0, 0);
     ctx.restore();
 };
 
@@ -212,7 +229,7 @@ Sprite.prototype.doPaintExportAnimation = function(){
     if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
     if (this.nExport < this.frameList.length){
         var ctx = this.canvasTmpExportAnimation.getContext('2d');
-        this.paintNextFrame(ctx, this.nExport,"#00FF00");
+        this.paintNextFrame(ctx, this.nExport,"#00FF00",this.canvasTmpExportAnimation );
         var time = this.timeMs[this.nExport];
         this.encoder.setDelay(time);
         this.encoder.addFrame(ctx);
@@ -284,15 +301,11 @@ Sprite.prototype.interpolateNextFrame = function(no){
 
     ctxt.clearRect(0,0,canv.width,canv.height);
     ctxt.drawImage(imageOri,this.pos[no].x,this.pos[no].y);
-    ctx.clearRect(0,0,canv.width,canv.height);
-    ctx.drawImage(imageOri,this.pos[no].x,this.pos[no].y);
     var imageDataOri = ctxt.getImageData(0,0,canv.width,canv.height);
 
     //coloco el frame final + su desplazamiento en el canvas para conseguir la data del frame
     ctxt.clearRect(0,0,canv.width,canv.height);
     ctxt.drawImage(imageFin,this.pos[nf].x,this.pos[nf].y);
-    ctx.clearRect(0,0,canv.width,canv.height);
-    ctx.drawImage(imageFin,this.pos[nf].x,this.pos[nf].y);
     var imageDataFin = ctxt.getImageData(0,0,canv.width,canv.height);
 
 
@@ -312,8 +325,6 @@ Sprite.prototype.interpolateNextFrame = function(no){
     //coger imagen en el canvas y crear nuevo frame
     ctxt.clearRect(0,0,canv.width,canv.height);
     ctxt.putImageData(imageDataInterpolation,0,0);
-    ctx.clearRect(0,0,canv.width,canv.height);
-    ctx.putImageData(imageDataInterpolation,0,0);
     var dataImage = canv.toDataURL("image/png");
     var newFrame = new Frame(dataImage);
 
