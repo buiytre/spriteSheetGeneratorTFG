@@ -265,8 +265,7 @@ function doMouseUp(event){
 function doMouseDblClick(event){
     switch (event.which){
     case 1:
-        switch (modeCanvas){
-            case IMPORTEDIMAGE:
+         if (modeCanvas == IMPORTEDIMAGE && mouseMode == MOUSESELECTIONMODE){
                 if (transparentColor){
                     getSelectionAroundPoint(mousePos);
                     pinta();
@@ -313,6 +312,7 @@ function doMouseMove(event) {
                         posImage.x = posImage.x + (mousePos.x - startClickLeft.x);
                         posImage.y = posImage.y + (mousePos.y - startClickLeft.y);
                         pinta();
+                        imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
                         startClickLeft = getMousePos(canvas, event);
                     }
                     break;
@@ -845,10 +845,10 @@ function getSelectionAroundPoint(point){
             }
         }
     }
-    selectionTL.x = minX;
-    selectionTL.y = minY;
-    selectionBR.x = maxX;
-    selectionBR.y = maxY;
+    selectionTL.x = minX + 1;
+    selectionTL.y = minY + 1;
+    selectionBR.x = maxX - 1;
+    selectionBR.y = maxY - 1;
 }
 
 
