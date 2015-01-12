@@ -290,4 +290,9 @@ Spritesheet.prototype.getClanLibXML = function(){
     text = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
     return text;
 
-}
+};
+
+Spritesheet.prototype.interpolateNextFrame = function(spriteName,nFrame){
+    var thisSprite = this.getSpriteByName(spriteName);
+    thisSprite.interpolateNextFrame(nFrame);
+};

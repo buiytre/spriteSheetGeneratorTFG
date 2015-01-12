@@ -874,6 +874,19 @@ function markPixel(x,y, value){
     puntosVisitados[x][y] = value;
     return true;
 }
+
+function interpolateNextFrameBtn(){
+    var selectedSprite = $("#spriteList").val();
+    if (selectedSprite == null || selectedFrame == -1){
+        alert("Has de seleccionar un frame de un sprite antes");
+    }else{
+        sheet.stopOldAnimation();
+        sheet.interpolateNextFrame(selectedSprite,selectedFrame);
+        modeCanvas = FRAMETOSELECT;
+        sheet.paintAnimation(selectedSprite,$("#previewSpriteCanvas").get(0));
+        pinta();
+    }
+}
 /*
 function resizeCanvas(canvas, width, height){
     var newCanvas = document.createElement("canvas");

@@ -250,3 +250,89 @@ Sprite.prototype.getResultGif = function(){
 Sprite.prototype.getNumberFrames = function(){
     return this.frameList.length;
 };
+
+Sprite.prototype.interpolateNextFrame = function(no){
+    var nf = no+1;
+    if (this.frameList.length <= no || this.frameList.length <= nf) return null;
+    var canv = document.createElement("canvas");
+    var ctxt = canv.getContext('2d');
+    // el tiempo origen sera 0, y el final timeMs. El frame lo pondremos justo entre medio de los dos
+    var timeOrigen = 0;
+    var timeFinal = this.timeMs[no];
+    var timeDest = ((timeFinal-timeOrigen)/2)+timeOrigen;
+    var imageOri = this.frameList[no].getImageFrame();
+    var imageFin = this.frameList[nf].getImageFrame();
+    //busco el tamaño del frame intermedio calculando el tamaño del frame maximo entre los dos
+    var maxWidth = 0;
+    var maxHeight = 0;
+    if (imageOri.width+this.pos[no].x > imageFin.width+this.pos[nf].x){
+        maxWidth = imageOri.width+this.pos[no].x;
+    }else{
+        maxWidth = imageFin.width+this.pos[nf].x;
+    }
+    if (imageOri.height+this.pos[no].y > imageFin.height+this.pos[nf].y){
+        maxHeight = imageOri.height+this.pos[no].y;
+    }else{
+        maxHeight = imageFin.height+this.pos[nf].y;
+    }
+
+    //creo el canvas para comparar las imagenes con el maximo tamaño de los dos
+    canv.height = maxHeight;
+    canv.width = maxWidth;
+
+    //coloco el frame origen + su desplazamiento en el canvas para conseguir la data del frame
+
+    ctxt.clearRect(0,0,canv.width,canv.height);
+    ctxt.drawImage(imageOri,this.pos[no].x,this.pos[no].y);
+    ctx.clearRect(0,0,canv.width,canv.height);
+    ctx.drawImage(imageOri,this.pos[no].x,this.pos[no].y);
+    var imageDataOri = ctxt.getImageData(0,0,canv.width,canv.height);
+
+    //coloco el frame final + su desplazamiento en el canvas para conseguir la data del frame
+    ctxt.clearRect(0,0,canv.width,canv.height);
+    ctxt.drawImage(imageFin,this.pos[nf].x,this.pos[nf].y);
+    ctx.clearRect(0,0,canv.width,canv.height);
+    ctx.drawImage(imageFin,this.pos[nf].x,this.pos[nf].y);
+    var imageDataFin = ctxt.getImageData(0,0,canv.width,canv.height);
+
+
+    var imageDataInterpolation = ctx.createImageData(canv.width,canv.height);
+    for (var i=0;i < imageDataInterpolation.data.length; i=i+4){
+        imageDataInterpolation.data[i] = imageDataOri.data[i]+((imageDataFin.data[i]-imageDataOri.data[i])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
+        imageDataInterpolation.data[i+1] = imageDataOri.data[i+1]+((imageDataFin.data[i+1]-imageDataOri.data[i+1])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
+        imageDataInterpolation.data[i+2] = imageDataOri.data[i+2]+((imageDataFin.data[i+2]-imageDataOri.data[i+2])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
+        imageDataInterpolation.data[i+3] = imageDataOri.data[i+3]+((imageDataFin.data[i+3]-imageDataOri.data[i+3])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
+        /*if ((imageDataOri.data[i+3] + imageDataFin.data[i+3]) == 0){
+            imageDataInterpolation.data[i+3] = 0;
+        }else{
+            imageDataInterpolation.data[i+3] = 255;
+        }*/
+    }
+
+    //coger imagen en el canvas y crear nuevo frame
+    ctxt.clearRect(0,0,canv.width,canv.height);
+    ctxt.putImageData(imageDataInterpolation,0,0);
+    ctx.clearRect(0,0,canv.width,canv.height);
+    ctx.putImageData(imageDataInterpolation,0,0);
+    var dataImage = canv.toDataURL("image/png");
+    var newFrame = new Frame(dataImage);
+
+    this.insertFrameNextTo(newFrame,no);
+
+    //modificar transicion entre frames (timeMs)
+    this.timeMs[no] = this.timeMs[no]/2; //el frame origen tardara la mitad de antes en llegar al siguiente frame (el nuevo frame)
+    this.timeMs[no+1] = this.timeMs[no]; //el nuevo frame sera el sigiuente a no
+};
+
+
+Sprite.prototype.insertFrameNextTo = function(frame,n){
+    var i = 0;
+    for (i = this.frameList.length; i>n+1; i--){
+        this.frameList[i] = this.frameList[i-1];
+        this.pos[i] = this.pos[i-1];
+        this.timeMs[i] = this.timeMs[i-1];
+    }
+    this.frameList[i] = frame;
+    this.pos[i] = new Point(0,0);
+    this.timeMs[i] = 100;
+};
