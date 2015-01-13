@@ -9,7 +9,7 @@
  * @constructor
  */
 var Sprite = function(name){
-    this.n = 0;
+    this.index = 0;
     this.frameList = new Array();
     this.pos = new Array();
     this.timeMs = new Array();
@@ -72,7 +72,7 @@ Sprite.prototype.delFrame = function(n){
     this.frameList.splice(n,1);
     this.pos.splice(n,1);
     this.timeMs.splice(n,1);
-    if (this.n == n) this.n = 0;
+    if (this.index == n) this.index = 0;
     this.recalculateMaxWidthHeight();
     this.nAnimation = 0;
 };
@@ -94,16 +94,16 @@ Sprite.prototype.getNextFrame = function(){
     if (this.frameList.length == 0){
         throw "The sprite not contains any frame";
     }
-    if (this.n >= this.frameList.length) {
-        this.n = this.frameList.length - 1;
+    if (this.index >= this.frameList.length){
+        this.index = this.frameList.length -1;
     }
-    return this.frameList[this.n++];
+    return this.frameList[this.index++];
 };
 
 Sprite.prototype.hasNextFrame = function(){
     var hasNext = true;
-    if (this.n >= this.frameList.length){
-          hasNext = false;
+    if (this.index >= this.frameList.length){
+        hasNext = false;
     }
     return hasNext;
 };
@@ -162,7 +162,7 @@ Sprite.prototype.paintAnimation = function(canvas){
 };
 
 Sprite.prototype.resetSelection = function(){
-    this.n = 0;
+    this.index = 0;
 };
 
 Sprite.prototype.doPaintAnimation = function(){

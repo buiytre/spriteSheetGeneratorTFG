@@ -10,6 +10,10 @@
  */
 var Spritesheet = function(){
     this.spriteList = new Array();
+//    this.frameSpriteSheetOrganized = false;
+    this.frameMetaData = new Array(); // {indexSprite, indexFrame, pos}
+    this.wMax = 0;
+    this.hMax = 0;
     this.oldAnimation = -1;
 };
 
@@ -71,36 +75,76 @@ Spritesheet.prototype.paintFrameSelection = function(spriteName, canvas) {
     }
 };
 
+/**
+ * create a canvas with all the frames of all the sprites in horizontal
+ * @returns {HTMLElement}
+ */
 Spritesheet.prototype.getSpriteSheet = function(){
+    this.organizeFunction();
     var newCanvas = document.createElement("canvas");
     var ctx = newCanvas.getContext('2d');
-    var wMax = 0;
-    var hMax = 0;
-    for (var i=0; i < this.spriteList.length; i++){
-        this.spriteList[i].resetSelection();
-        while (this.spriteList[i].hasNextFrame()){
-            var fr = this.spriteList[i].getNextFrame();
-            var img = fr.getImageFrame();
-            wMax = wMax + img.width;
-            if (hMax < img.height) hMax = img.height;
-        }
-    }
-    newCanvas.width = wMax;
-    newCanvas.height = hMax;
-    var w = 0;
-    var h = 0;
-    for (var i=0; i < this.spriteList.length; i++){
-        this.spriteList[i].resetSelection();
-        while (this.spriteList[i].hasNextFrame()){
-            var fr = this.spriteList[i].getNextFrame();
-            var img = fr.getImageFrame();
-            ctx.drawImage(img,w,h);
-            w = w + img.width;
-//            h = h + img.height;
-        }
+    newCanvas.width = this.wMax;
+    newCanvas.height = this.hMax;
+    for (var i=0; i < this.frameMetaData.length;i++){
+        var frameMeta = this.frameMetaData[i];
+        var image = this.spriteList[frameMeta.indexSprite].getFrame(frameMeta.indexFrame).getImageFrame();
+        ctx.drawImage(image,frameMeta.pos.x,frameMeta.pos.y);
     }
     return newCanvas;
 };
+
+Spritesheet.prototype.organizeFunction = function(){
+    this.organizeSpriteSheetHorizontalOnly();
+};
+
+Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
+    this.wMax = 0;
+    this.hMax = 0;
+    var countFrames = 0;
+    this.frameMetaData = new Array();
+    for (var i=0; i < this.spriteList.length; i++){
+        for (var j=0; this.spriteList[i].existsFrame(j); j++){
+            var pos = new Point(this.wMax, 0);
+            var frameMeta = {indexSprite: i, indexFrame: j, pos: pos};
+            this.frameMetaData[countFrames] = frameMeta;
+            var img = this.spriteList[i].getFrame(j).getImageFrame();
+            this.wMax = this.wMax + (1 + img.width + 1);
+            if (this.hMax < img.height) this.hMax = img.height;
+            countFrames++;
+        }
+    }
+    this.frameSpriteSheetOrganized = true;
+};
+
+/*
+Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
+    var countFrames = 0;
+    for (var i=0; i < this.spriteList.length; i++){
+        this.spriteList[i].resetSelection();
+        while (this.spriteList[i].hasNextFrame()){
+            var fr = this.spriteList[i].getNextFrame();
+            this.framePos[countFrames] = new Point(0,0);
+            this.frameMetaData[countFrames] = fr.getImageFrame();
+            countFrames++;
+        }
+    }
+    var levels = new Array();
+    for (var i= 0; i < countFrames; i++){
+        for (var j=0; j<levels.length;j++){
+            if ((this.frameMetaData[i].width + levels[j].width) < maxWidth){
+
+            }
+        }
+        if (j== levels.length){
+            //creamos un nuevo nivel
+            var level = {height: this.frameMetaData[i].height, width: this.frameMetaData[i].width};
+            levels[j] = level;
+        }
+    }
+
+    this.frameSpriteSheetOrganized = true;
+};
+*/
 
 Spritesheet.prototype.existsSprite = function(spriteName){
     if (this.getSpriteByName(spriteName) == null){
@@ -266,7 +310,16 @@ Spritesheet.prototype.getNumberFrames = function(spriteName){
     return n;
 };
 
+Spritesheet.prototype.getMetaDataInfoFrom = function(sprite,frame){
+    for (var i=0; i < this.frameMetaData.length;i++){
+        var frMeta = this.frameMetaData[i];
+        if (frMeta.indexSprite == sprite && frMeta.indexFrame == frame) return frMeta;
+    }
+    return null;
+};
+
 Spritesheet.prototype.getClanLibXML = function(){
+    this.organizeFunction();
     var text = "";
     text = '<?xml version="1.0" encoding="iso-8859-1"?>\r\n';
     text = text +'<resources>\r\n';
@@ -276,8 +329,8 @@ Spritesheet.prototype.getClanLibXML = function(){
         text = text +'        <image file="spriteSheet.png">\r\n';
         for (var j=0; j < this.spriteList[i].getNumberFrames(); j++){
             var fr = this.spriteList[i].getFrame(j);
-            text = text +'             <grid pos="'+x+',0" size="'+fr.width +','+fr.height+'" array="1,1" />\r\n';
-            x = x + fr.width;
+            var metaData = this.getMetaDataInfoFrom(i,j);
+            text = text +'             <grid pos="'+metaData.pos.x+','+metaData.pos.y+'" size="'+fr.width +','+fr.height+'" array="1,1" />\r\n';
         }
         text = text +'        </image>\r\n';
         text = text +'        <animation speed="200" loop="yes" pingpong="no" />\r\n';
