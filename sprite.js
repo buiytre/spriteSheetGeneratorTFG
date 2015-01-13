@@ -9,7 +9,6 @@
  * @constructor
  */
 var Sprite = function(name){
-    this.index = 0;
     this.frameList = new Array();
     this.pos = new Array();
     this.timeMs = new Array();
@@ -72,7 +71,6 @@ Sprite.prototype.delFrame = function(n){
     this.frameList.splice(n,1);
     this.pos.splice(n,1);
     this.timeMs.splice(n,1);
-    if (this.index == n) this.index = 0;
     this.recalculateMaxWidthHeight();
     this.nAnimation = 0;
 };
@@ -86,27 +84,6 @@ Sprite.prototype.recalculateMaxWidthHeight = function(){
     }
 };
 
-/**
- * metodo que devuelve el siguiente frame en una animación
- * @returns {Frame}
- */
-Sprite.prototype.getNextFrame = function(){
-    if (this.frameList.length == 0){
-        throw "The sprite not contains any frame";
-    }
-    if (this.index >= this.frameList.length){
-        this.index = this.frameList.length -1;
-    }
-    return this.frameList[this.index++];
-};
-
-Sprite.prototype.hasNextFrame = function(){
-    var hasNext = true;
-    if (this.index >= this.frameList.length){
-        hasNext = false;
-    }
-    return hasNext;
-};
 /**
  * metodo que devuelve el frame de la posición n
  * @param n entero que indica la posición del frame a recibir
@@ -161,9 +138,6 @@ Sprite.prototype.paintAnimation = function(canvas){
     }
 };
 
-Sprite.prototype.resetSelection = function(){
-    this.index = 0;
-};
 
 Sprite.prototype.doPaintAnimation = function(){
     if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);

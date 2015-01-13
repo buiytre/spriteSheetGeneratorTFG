@@ -63,12 +63,10 @@ Spritesheet.prototype.paintFrameSelection = function(spriteName, canvas) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
-        thisSprite.resetSelection();
         ctx.clearRect(0,0,canvas.width,canvas.height);
         var y = 0;
-        while (thisSprite.hasNextFrame()){
-            var frameTmp = thisSprite.getNextFrame();
-            var image = frameTmp.getImageFrame();
+        for (var i=0;thisSprite.existsFrame(i);i++){
+            var image = thisSprite.getFrame(i).getImageFrame();
             ctx.drawImage(image,0,y,image.width,image.height);
             y = y + image.height;
         }
@@ -104,33 +102,35 @@ Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
     this.frameMetaData = new Array();
     for (var i=0; i < this.spriteList.length; i++){
         for (var j=0; this.spriteList[i].existsFrame(j); j++){
-            var pos = new Point(this.wMax, 0);
-            var frameMeta = {indexSprite: i, indexFrame: j, pos: pos};
-            this.frameMetaData[countFrames] = frameMeta;
+            var pos = new Point(1+this.wMax, 1);    // sumamos 1 para tener margen de seleccion por la izq y arriba de 1 px
             var img = this.spriteList[i].getFrame(j).getImageFrame();
-            this.wMax = this.wMax + (1 + img.width + 1);
-            if (this.hMax < img.height) this.hMax = img.height;
+            var frameMeta = {indexSprite: i, indexFrame: j, pos: pos, width: (img.width+1), height: (img.height+1)}; //sumamos 1 para tener margen de seleccion por abajo y la der
+            this.frameMetaData[countFrames] = frameMeta;
+            this.wMax = this.wMax + frameMeta.width;
+            if (this.hMax < img.height) this.hMax = frameMeta.height;
             countFrames++;
         }
     }
     this.frameSpriteSheetOrganized = true;
 };
 
-/*
+
 Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
     var countFrames = 0;
+    this.frameMetaData = new Array();
     for (var i=0; i < this.spriteList.length; i++){
-        this.spriteList[i].resetSelection();
-        while (this.spriteList[i].hasNextFrame()){
-            var fr = this.spriteList[i].getNextFrame();
-            this.framePos[countFrames] = new Point(0,0);
-            this.frameMetaData[countFrames] = fr.getImageFrame();
+        for (j=0; this.spriteList[i].existsFrame(j); j++){
+            var imageFrame = this.spriteList[i].getFrame(j).getImageFrame();
+            var pos = new Point(0,0);
+            var frameMeta = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};
+            this.frameMetaData[countFrames] = frameMeta;
             countFrames++;
         }
     }
     var levels = new Array();
     for (var i= 0; i < countFrames; i++){
         for (var j=0; j<levels.length;j++){
+            var frameMeta = this.frameMetaData[i];
             if ((this.frameMetaData[i].width + levels[j].width) < maxWidth){
 
             }
@@ -144,7 +144,7 @@ Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
 
     this.frameSpriteSheetOrganized = true;
 };
-*/
+
 
 Spritesheet.prototype.existsSprite = function(spriteName){
     if (this.getSpriteByName(spriteName) == null){
@@ -179,11 +179,9 @@ Spritesheet.prototype.paintSelection = function(spriteName, mousePos,canvas) {
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
         var yIni = 0;
-        thisSprite.resetSelection();
         var found = false;
-        while (thisSprite.hasNextFrame() && !found){
-            var frameTmp = thisSprite.getNextFrame();
-            var image = frameTmp.getImageFrame();
+        for (var i=0; thisSprite.existsFrame(i) && !found; i++){
+            var image = thisSprite.getFrame(i).getImageFrame();
             var yEnd = yIni + image.height;
             if (mousePos.y <= yEnd && mousePos.y >= yIni && mousePos.x >= 0 && mousePos.x <= image.width){
                 ctx.strokeStyle = "#f00";
@@ -200,21 +198,17 @@ Spritesheet.prototype.paintSelection = function(spriteName, mousePos,canvas) {
 
 Spritesheet.prototype.getSelection = function(spriteName, mousePos){
     var spriteSelected = -1;
-    var n = 0;
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
         var yIni = 0;
-        thisSprite.resetSelection();
         var found = false;
-        while (thisSprite.hasNextFrame() && !found){
-            var frameTmp = thisSprite.getNextFrame();
-            var image = frameTmp.getImageFrame();
+        for (var i=0; thisSprite.existsFrame(i) && !found; i++){
+            var image = thisSprite.getFrame(i).getImageFrame();
             var yEnd = yIni + image.height;
             if (mousePos.y <= yEnd && mousePos.y >= yIni && mousePos.x >= 0 && mousePos.x <= image.width){
                 found = true;
-                spriteSelected = n;
+                spriteSelected = i;
             }
-            n=n+1;
             yIni = yEnd;
         }
     }
