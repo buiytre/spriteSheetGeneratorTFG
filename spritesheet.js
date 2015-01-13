@@ -10,10 +10,6 @@
  */
 var Spritesheet = function(){
     this.spriteList = new Array();
-    this.maxwidth = 0;
-    this.maxheight = 0;
-    this.frameMaxWidth = 0;
-    this.frameMaxHeight = 0;
     this.oldAnimation = -1;
 };
 
@@ -55,10 +51,6 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
         if (this.spriteList[i].getName() == spriteName){
             this.spriteList[i].addFrame(frame);
             found = true;
-            this.maxwidth = this.maxwidth + frame.width;
-            this.maxheight = this.maxheight + frame.height;
-            if (frame.width > this.frameMaxWidth) this.frameMaxWidth = frame.width;
-            if (frame.height > this.frameMaxHeight) this.frameMaxHeight = frame.height;
         }
     }
 };
@@ -82,10 +74,21 @@ Spritesheet.prototype.paintFrameSelection = function(spriteName, canvas) {
 Spritesheet.prototype.getSpriteSheet = function(){
     var newCanvas = document.createElement("canvas");
     var ctx = newCanvas.getContext('2d');
+    var wMax = 0;
+    var hMax = 0;
+    for (var i=0; i < this.spriteList.length; i++){
+        this.spriteList[i].resetSelection();
+        while (this.spriteList[i].hasNextFrame()){
+            var fr = this.spriteList[i].getNextFrame();
+            var img = fr.getImageFrame();
+            wMax = wMax + img.width;
+            if (hMax < img.height) hMax = img.height;
+        }
+    }
+    newCanvas.width = wMax;
+    newCanvas.height = hMax;
     var w = 0;
     var h = 0;
-    newCanvas.width = this.maxwidth;
-    newCanvas.height = this.frameMaxHeight;
     for (var i=0; i < this.spriteList.length; i++){
         this.spriteList[i].resetSelection();
         while (this.spriteList[i].hasNextFrame()){
@@ -287,10 +290,37 @@ Spritesheet.prototype.getClanLibXML = function(){
     }
     text = text +'</resources>\r\n';
 
-    text = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
+    text = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
     return text;
 
 };
+
+Spritesheet.prototype.getCocos2Dplist = function(){
+    var text = "";
+    text = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
+    text = '<plist version="1.0">\r\n';
+    text = '    <dict>\r\n';
+    text = '        <key>frames</key>\r\n';
+    text = '        <dict>\r\n';
+    //toDo
+    //              <key>slice01_01.png</key>
+    //              <dict>
+    //                  <key>frame</key>
+    //                  <string>{{423,777},{43,47}}</string>
+    //                  <key>offset</key>
+    //                  <string>{0,0}</string>
+    //                  <key>rotated</key>
+    //                  <false/>
+    //                  <key>sourceColorRect</key>
+    //                  <string>{{0,0},{43,47}}</string>
+    //                  <key>sourceSize</key>
+    //                  <string>{43,47}</string>
+    //              </dict>
+    //ftodo
+    text = '        </dict>\r\n';
+    text = '    </dict>\r\n';
+    text = '</plist>\r\n';
+}
 
 Spritesheet.prototype.interpolateNextFrame = function(spriteName,nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
