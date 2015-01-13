@@ -92,7 +92,8 @@ Spritesheet.prototype.getSpriteSheet = function(){
 };
 
 Spritesheet.prototype.organizeFunction = function(){
-    this.organizeSpriteSheetHorizontalOnly();
+    //this.organizeSpriteSheetHorizontalOnly();
+    this.organizeSpriteSheetFFDH(1024);
 };
 
 Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
@@ -114,33 +115,62 @@ Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
     this.frameSpriteSheetOrganized = true;
 };
 
+Spritesheet.prototype.orderMetaByHeightDesc = function(a,b){
+    return b.height - a.height;
+};
 
-Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
-    var countFrames = 0;
+Spritesheet.prototype.orderMetaByHeightAsc = function(a,b){
+    return b.height - a.height;
+};
+
+Spritesheet.prototype.fillMetaWithNoPosition = function(){
     this.frameMetaData = new Array();
     for (var i=0; i < this.spriteList.length; i++){
-        for (j=0; this.spriteList[i].existsFrame(j); j++){
+        for (var j=0; this.spriteList[i].existsFrame(j); j++){
             var imageFrame = this.spriteList[i].getFrame(j).getImageFrame();
             var pos = new Point(0,0);
             var frameMeta = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};
-            this.frameMetaData[countFrames] = frameMeta;
-            countFrames++;
+            this.frameMetaData[this.frameMetaData.length] = frameMeta;
         }
     }
-    var levels = new Array();
-    for (var i= 0; i < countFrames; i++){
-        for (var j=0; j<levels.length;j++){
-            var frameMeta = this.frameMetaData[i];
-            if ((this.frameMetaData[i].width + levels[j].width) < maxWidth){
+};
 
+Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
+    this.fillMetaWithNoPosition();
+    this.frameMetaData.sort(this.orderMetaByHeightAsc);
+
+    var levels = new Array();
+    for (var i= 0; i < this.frameMetaData.length; i++){
+        var inserted = false;
+        for (var j=0; !inserted && j<levels.length;j++){
+            if (((this.frameMetaData[i].width+2) + levels[j].width) < maxWidth && (this.frameMetaData[i].height-2) < levels[j].height){
+                levels[j].width = levels[j].width + (this.frameMetaData[i].width+2);
+                levels[j].frames[levels[j].frames.length] = i;
+                inserted = true;
             }
         }
-        if (j== levels.length){
+        if (!inserted){
             //creamos un nuevo nivel
-            var level = {height: this.frameMetaData[i].height, width: this.frameMetaData[i].width};
+            var framesInLevel = new Array();
+            framesInLevel[0] = i;
+            var level = {height: (this.frameMetaData[i].height+2), width: (this.frameMetaData[i].width+2), frames: framesInLevel};
             levels[j] = level;
         }
     }
+
+    var y = 0;
+    this.wMax = 0;
+    for (var i =0; i < levels.length;i++){
+        if (this.wMax < levels[i].width) this.wMax = levels[i].width;
+        var x = 0;
+        for (var j = 0; j < levels[i].frames.length; j++){
+            var newPos = new Point((x+1),(y+1));
+            this.frameMetaData[levels[i].frames[j]].pos = newPos;
+            x = x + 2 + this.frameMetaData[levels[i].frames[j]].width;
+        }
+        y = y + 2 + levels[i].height;
+    }
+    this.hMax = y;
 
     this.frameSpriteSheetOrganized = true;
 };
