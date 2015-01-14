@@ -662,23 +662,21 @@ function addSpriteBtn(){
  */
 function exportSheetBtn(){
     var data = sheet.getSpriteSheet().toDataURL();
-    var link = document.createElement('a');
-
-    link.setAttribute('download', 'spriteSheet.png');
-    link.setAttribute('href', data);
-    link.click();
-//    window.open(dataURL);
+    downloadThis('spriteSheet.png',data);
 }
 
 function downloadClanLibXMLbtn(){
     var data = sheet.getClanLibXML();
+    downloadThis('resources.xml',data);
+    var data = sheet.getSpriteSheet().toDataURL();
+    downloadThis('spriteSheet.png',data);
+}
+
+function downloadThis(fileName, data){
     var link = document.createElement('a');
-
-
-    link.setAttribute('download', 'resources.xml');
+    link.setAttribute('download',fileName);
     link.setAttribute('href', data);
     link.click();
-
 }
 
 function changePreview(){
@@ -740,7 +738,7 @@ function setMilisecondsBtn(){
     var numberMiliseconds = $("#milisecondsText").val();
     if ($.isNumeric(numberMiliseconds)){
         sheet.stopOldAnimation();
-        sheet.setMs($("#spriteList").val(),selectedFrame,numberMiliseconds);
+        sheet.setMsToFrame($("#spriteList").val(),selectedFrame,numberMiliseconds);
         sheet.paintAnimation($("#spriteList").val(),$("#previewSpriteCanvas").get(0));
         alert('Numero de milisegundos del frame fijado a ' + numberMiliseconds);
     }else{
@@ -900,3 +898,7 @@ function resizeCanvas(canvas, width, height){
     canvas.getContext("2d").drawImage(newCanvas,0,0);
 }
 */
+
+function testBtn(){
+    sheet.organizeSpriteSheetLeftTop();
+}
