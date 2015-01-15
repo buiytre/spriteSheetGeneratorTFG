@@ -31,3 +31,24 @@ Frame.prototype.getImageFrame = function(){
 Frame.prototype.downloadFrame = function(){
     window.open(this.image.src);
 };
+
+Frame.prototype.compareWith = function(canvas,x,y){
+    var ctx = canvas.getContext('2d');
+    var dataDest = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+    var canvThisImage = document.createElement('canvas');
+    canvThisImage.width = canvas.width;
+    canvThisImage.height = canvas.height;
+    ctx = canvThisImage.getContext('2d');
+    ctx.clearRect(0,0,canvThisImage.width,canvThisImage.height);
+    ctx.drawImage(this.image,x,y);
+    var dataOrig = ctx.getImageData(0,0,canvThisImage.width, canvThisImage.height);
+
+    var dif = 0;
+    for (var i=0; i < dataOrig.data.length; i++){
+        if (dataOrig.data[i] != dataDest.data[i]){
+            dif++;
+        }
+    }
+    return ((100 * dif) / dataOrig.data.length);
+};

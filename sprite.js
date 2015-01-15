@@ -24,6 +24,8 @@ var Sprite = function(name){
     this.nExport = 0;
     this.encoder = null;
     this.encoderEnd = false;
+
+    this.defaultMs = 200;
 };
 
 /**
@@ -36,7 +38,7 @@ Sprite.prototype.addFrame = function (frame){
     point.x = 0;
     point.y = 0;
     this.pos[this.pos.length] = point;
-    this.timeMs[this.timeMs.length] = 100;
+    this.timeMs[this.timeMs.length] = this.defaultMs;
     if (this.maxWidth < frame.width) this.maxWidth = frame.width;
     if (this.maxHeight < frame.height) this.maxHeight = frame.height;
     this.nAnimation = 0;
@@ -289,11 +291,6 @@ Sprite.prototype.interpolateNextFrame = function(no){
         imageDataInterpolation.data[i+1] = imageDataOri.data[i+1]+((imageDataFin.data[i+1]-imageDataOri.data[i+1])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
         imageDataInterpolation.data[i+2] = imageDataOri.data[i+2]+((imageDataFin.data[i+2]-imageDataOri.data[i+2])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
         imageDataInterpolation.data[i+3] = imageDataOri.data[i+3]+((imageDataFin.data[i+3]-imageDataOri.data[i+3])/(timeFinal-timeOrigen))*(timeDest-timeOrigen);
-        /*if ((imageDataOri.data[i+3] + imageDataFin.data[i+3]) == 0){
-            imageDataInterpolation.data[i+3] = 0;
-        }else{
-            imageDataInterpolation.data[i+3] = 255;
-        }*/
     }
 
     //coger imagen en el canvas y crear nuevo frame
@@ -320,4 +317,68 @@ Sprite.prototype.insertFrameNextTo = function(frame,n){
     this.frameList[i] = frame;
     this.pos[i] = new Point(0,0);
     this.timeMs[i] = 100;
+};
+
+Sprite.prototype.autoTuneCalcSlowDiffFunc = function(dif, count){
+    return dif*2 + 200*count;
+};
+
+Sprite.prototype.autoTuneCalcFastDiffFunc = function(dif, count){
+    return (200 - dif*2) + 200*count;
+};
+
+Sprite.prototype.autoTuneTimeMs = function(usedFunc){
+    for (var i=0; i < this.frameList.length - 1; i++){
+        var frame  = this.frameList[i];
+
+        var canv = document.createElement("canvas");
+        canv.width =  this.maxWidth;
+        canv.height =  this.maxHeight;
+        var ctxt = canv.getContext('2d');
+        var imageNext = this.frameList[i+1].getImageFrame();
+        ctxt.clearRect(0,0,canv.width,canv.height);
+        ctxt.drawImage(imageNext,this.pos[i+1].x,this.pos[i+1].y);
+        var dif = frame.compareWith(canv, this.pos[i].x,this.pos[i].y);
+
+        //si son iguales contamos el numero de frames iguales y los quitamos de la animación, haremos que el frame actual dure mas
+        var count = 0;
+        var end = false;
+        while (!end){
+            if (dif == 0) {
+                //eliminamos el frame siguiente
+                for (var j = i + 1; j < this.frameList.length - 1; j++) {
+                    this.frameList[j] = this.frameList[j + 1];
+                    this.pos[j] = this.pos[j + 1];
+                    this.timeMs[j] = this.timeMs[j + 1];
+                }
+                this.frameList.length--;
+                this.pos.length--;
+                this.timeMs.length--;
+
+                //aumentamos en 1 el numero de frames iguales contados y comprobamos q el siguiente no sea igual
+                count++;
+                if (i + 1 < this.frameList.length) {
+                    ctxt.clearRect(0, 0, canv.width, canv.height);
+                    imageNext = this.frameList[i + 1].getImageFrame();
+                    ctxt.drawImage(imageNext, this.pos[i + 1].x, this.pos[i + 1].y);
+                    dif = frame.compareWith(canv, this.pos[i].x, this.pos[i].y);
+                } else {
+                    ctxt.clearRect(0, 0, canv.width, canv.height);
+                    imageNext = this.frameList[0].getImageFrame();
+                    ctxt.drawImage(imageNext, this.pos[0].x, this.pos[0].y);
+                    dif = frame.compareWith(canv, this.pos[i].x, this.pos[i].y);
+                    end = true;
+                }
+            }else{
+                end = true;
+            }
+            
+        }
+
+        this.timeMs[i] = usedFunc(dif,count);
+    }
+};
+
+Sprite.prototype.setDefaultMs = function(param){
+    this.defaultMs = param;
 };

@@ -898,7 +898,14 @@ function resizeCanvas(canvas, width, height){
     canvas.getContext("2d").drawImage(newCanvas,0,0);
 }
 */
+function setAutoMsFastBtn(){
+    var selectedSprite = $("#spriteList").val();
+    var spr = new Sprite(" ");
+    sheet.autoTuneTimeMs(selectedSprite,spr.autoTuneCalcFastDiffFunc);
+}
 
-function testBtn(){
-    sheet.organizeSpriteSheetLeftTop();
+function setAutoMsSlowBtn(){
+    var selectedSprite = $("#spriteList").val();
+    var spr = new Sprite(" ");
+    sheet.autoTuneTimeMs(selectedSprite,spr.autoTuneCalcSlowDiffFunc);
 }

@@ -676,3 +676,8 @@ Spritesheet.prototype.interpolateNextFrame = function(spriteName,nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
     thisSprite.interpolateNextFrame(nFrame);
 };
+
+Spritesheet.prototype.autoTuneTimeMs = function(spriteName, func){
+    var thisSprite = this.getSpriteByName(spriteName);
+    thisSprite.autoTuneTimeMs(func);
+};
