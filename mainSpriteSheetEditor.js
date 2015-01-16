@@ -20,6 +20,10 @@ const FRAMESELECTED = 3;
 var modeFrame = 0;      // indica si el canvas esta trabajando para ajustar los frames a la animación o para editarlos
 const MODEADJUST = 1;
 const MODEEDIT = 2;
+
+var modeSelection = 0;
+const SELECTIONDEFAULT = 0;
+const SELECTIONAUTO = 1;
 /**************************************************/
 var canvas;     //canvas central
 var ctx;        //ctx para el canvas central
@@ -59,6 +63,8 @@ var imageSprAdj = new Image;
 var posSprAdj = new Point;
 var posFrame = new Point;
 var bTransparencyPreview = false;
+
+var listOfFrames = new Array();
 
 var busy = false;
 /**
@@ -388,11 +394,22 @@ function pintaSelection() {
     ctx.save();
     switch (modeCanvas){
         case IMPORTEDIMAGE:
-            if (selectionTL.defined() && selectionBR.defined()) {
+            if (modeSelection == SELECTIONDEFAULT) {
+                if (selectionTL.defined() && selectionBR.defined()) {
+                    ctx.fillStyle = 'rgba(255,0,0,0.1)';
+                    ctx.strokeStyle = '#000000';
+                    ctx.strokeRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+                    ctx.fillRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+
+                }
+            }else if (modeSelection == SELECTIONAUTO){
                 ctx.fillStyle = 'rgba(255,0,0,0.1)';
                 ctx.strokeStyle = '#000000';
-                ctx.strokeRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
-                ctx.fillRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+                for (var i=0; i < listOfFrames.length; i++){
+                    ctx.strokeRect(listOfFrames[i].TL.x, listOfFrames[i].TL.y, listOfFrames[i].BR.x - listOfFrames[i].TL.x, listOfFrames[i].BR.y - listOfFrames[i].TL.y);
+                    ctx.fillRect(listOfFrames[i].TL.x, listOfFrames[i].TL.y, listOfFrames[i].BR.x - listOfFrames[i].TL.x, listOfFrames[i].BR.y - listOfFrames[i].TL.y);
+                }
+
             }
             break;
         case FRAMESELECTED:
@@ -579,6 +596,220 @@ function isTransparent(x,y){
         return true;
     }else{
         return false;
+    }
+}
+
+function isFrameCompletelyInsideArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR){
+    if (!isFrameOutsideLeft(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) && !isFrameOutsideRight(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) &&
+        !isFrameOutsideTop(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) && !isFrameOutsideBottom(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function isAreaInsideFrame(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if (isFrameOutsideLeft(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) && isFrameOutsideRight(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) &&
+        isFrameOutsideTop(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) && isFrameOutsideBottom(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function isFrameOutsideLeft(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if ((pointAreaTL.x > pointFrameTL.x)) {
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function isFrameOutsideRight(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if (pointAreaBR.x < pointFrameBR.x){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+
+function isFrameOutsideTop(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if (pointAreaTL.y  > pointFrameTL.y){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function isFrameOutsideBottom(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if (pointAreaBR.y < pointFrameBR.y){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function isFrameParciallyInArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
+    if ((pointFrameTL.x < pointAreaTL.x && pointFrameBR.x < pointAreaTL.x) ||
+        (pointFrameTL.x > pointAreaBR.x && pointFrameBR.x > pointAreaBR.x) ||
+        (pointFrameTL.y < pointAreaTL.y && pointFrameBR.y < pointAreaTL.y) ||
+        (pointFrameTL.y > pointAreaBR.y && pointFrameBR.y > pointAreaBR.y)) {
+        return false;
+    }else{
+        return true;
+    }
+}
+
+function newAreasToCheck(areaToCheck,i, frameTL, frameBR, pointLooking){
+    if (isFrameParciallyInArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR) || isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+        if (isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+            //creamos el siguiente cuadrante a la derecha de la imagen
+            var quadTL = new Point(frameBR.x+1,frameTL.y);
+            var quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
+            areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
+
+            //Creamos el cuadrante que queda abajo del sprite
+            var quad2TL =  new Point(areaToCheck[i].pTL.x, frameBR.y+1);
+            var quad2BR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
+            areaToCheck[areaToCheck.length] = {pTL:quad2TL,pBR:quad2BR};
+
+            // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
+            areaToCheck[i].pBR.x = frameTL.x-1;
+            areaToCheck[i].pBR.y = frameBR.y;
+        }else if(isAreaInsideFrame(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+            //Si el frame ocupa el area ya estamos
+            areaToCheck[i].pBR.x = areaToCheck[i].pTL.x; // we are done
+            areaToCheck[i].pBR.y = areaToCheck[i].pTL.y; // we are done
+        }else{
+            //el frame se sale por algun lado
+            //si no sale por la derecha creamos el area a la derecha del frame
+            if (!isFrameOutsideRight(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+                var quadTL  = new Point(frameBR.x+1,pointLooking.y);
+                var quadBR;
+                if (!isFrameOutsideBottom(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+                    quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
+                }else{
+                    quadBR = new Point(areaToCheck[i].pBR.x, areaToCheck[i].pBR);
+                }
+                areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
+            }
+
+            if (!isFrameOutsideBottom(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+                //Creamos el cuadrante que queda abajo del sprite
+                var quadTL2 = new Point(areaToCheck[i].pTL.x, frameBR.y+1);
+                var quadBR2 = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
+                areaToCheck[areaToCheck.length] = {pTL:quadTL2,pBR:quadBR2};
+
+                areaToCheck[i].pBR.y = frameBR.y; //cambiamos la zona actual para no solaparnos con la nueva zona
+            }
+
+            if (!isFrameOutsideLeft(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+                // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
+                areaToCheck[i].pBR.x = frameTL.x-1;
+            }else{
+                //la izquierda del frame le toca a otro area y entonces ya hemos acabado en esta
+                areaToCheck[i].pBR.x = areaToCheck[i].pTL.x; // we are done
+                areaToCheck[i].pBR.y = areaToCheck[i].pTL.y; // we are done
+            }
+        }
+    }
+}
+
+function detectFrames(){
+    if (transparentColor == true){
+        $("body").css("cursor", "wait");
+        listOfFrames = new Array();
+        var areaToCheck = new Array();
+        $("#numFramesDetected").html("Numero de sprites detectados: 0");
+        areaToCheck[0] = {pTL:new Point(0,0), pBR:new Point(imageDataPixels.width,imageDataPixels.height)};
+        for (var i=0; i < areaToCheck.length; i++){
+            for (var y=areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y;y++){
+                for (var x=areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++){
+                    if (!isTransparent(x,y)){
+                        var pointFound = new Point(x,y);
+                        getSelectionAroundPoint(pointFound);
+                        //añadimos el frame a la lista de frames
+                        var frame = getSelectedFrame(selectionTL, selectionBR);
+                        var pointTL = new Point(selectionTL.x, selectionTL.y);
+                        var pointBR = new Point(selectionBR.x, selectionBR.y);
+                        var detectedFrame = {TL: pointTL, BR: pointBR, frame:frame};
+                        listOfFrames[listOfFrames.length] = detectedFrame;
+                        //creamos nuevas areas alrededor de ese frame
+                        newAreasToCheck(areaToCheck,i, selectionTL, selectionBR, pointFound);
+
+                        //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
+                        for (var j=i+1; j < areaToCheck.length; j++) {
+                            newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
+                        }
+                        $("#numFramesDetected").html("Numero de sprites detectados: " + listOfFrames.length);
+                    }
+                }
+            }
+        }
+        selectionTL.x = 0;
+        selectionTL.y = 0;
+        selectionBR.x = 0;
+        selectionBR.y = 0;
+        modeSelection = SELECTIONAUTO;
+        pinta();
+        pintaSelection();
+        $("body").css("cursor", "default");
+        if (confirm("¿Desea Intentar autodetectar las animaciones para estos frames?")){
+            $("body").css("cursor", "wait");
+            autoDetectAnimations();
+            $("body").css("cursor", "default");
+        }
+        modeSelection = SELECTIONDEFAULT;
+        pinta();
+    }else{
+        alert ("no se puede detectar el color transparente en la imgen");
+    }
+}
+
+
+function autoDetectAnimations(){
+    var frameInSprite = new Array;
+    var listaSprites = new Array;
+    var spritesIntroducidos = 0;
+    var maxWidth = 0;
+    var maxHeight = 0;
+    for (var i=0; i < listOfFrames.length; i++){
+        frameInSprite[i] = -1;
+        if (maxWidth < listOfFrames[i].frame.width) maxWidth = listOfFrames[i].frame.width;
+        if (maxHeight < listOfFrames[i].frame.height) maxHeight = listOfFrames[i].frame.height;
+    }
+
+    var canv = document.createElement("canvas");
+    var ctxt = canv.getContext('2d');
+    canv.width = maxWidth;
+    canv.height = maxHeight;
+    for (var i=0; i < listOfFrames.length; i++){
+        if (frameInSprite[i] == -1){
+            listaSprites[spritesIntroducidos] = new Sprite("Sprite " + spritesIntroducidos);
+            listaSprites[spritesIntroducidos].addFrame(listOfFrames[i].frame);
+            frameInSprite[i] = spritesIntroducidos;
+            var frameImage = listOfFrames[i].frame.getImageFrame();
+            ctxt.clearRect(0,0,canv.width,canv.height);
+            ctxt.drawImage(frameImage,0,0);
+            for (var j=i+1; j < listOfFrames.length; j++){
+                if (frameInSprite[j] == -1) {
+                    var dif = listOfFrames[j].frame.compareWith(canv, 0, 0);
+                    if (dif < 5) {
+                        frameInSprite[j] = spritesIntroducidos;
+                        listaSprites[spritesIntroducidos].addFrame(listOfFrames[j].frame);
+                    }
+                }
+            }
+            spritesIntroducidos++;
+        }
+    }
+
+    for (var i=0; i < listaSprites.length; i++) {
+        if (sheet.addSprite(listaSprites[i])) {
+            $("#spriteList").append('<option value="' + listaSprites[i].getName() + '">' + listaSprites[i].getName() + '</option>');
+            $("#spriteName").val('');
+        }
     }
 }
 
@@ -812,8 +1043,8 @@ function deleteFrameBtn(){
 }
 
 function getSelectionAroundPoint(point){
-    puntosVisitados = _.range(canvas.width).map(function(){
-        return _.range(canvas.height).map(function(){
+    puntosVisitados = _.range(imageDataPixels.width).map(function(){
+        return _.range(imageDataPixels.height).map(function(){
             return false;
         });
     });
@@ -850,7 +1081,7 @@ function getSelectionAroundPoint(point){
 
 
 function pixelIsMarked(x,y){
-    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+    if (x < 0 || y < 0 || x >= imageDataPixels.width || y >= imageDataPixels.height){
         return false;
     }
     return puntosVisitados[x][y];
@@ -866,7 +1097,7 @@ function isNeighbourOfMarkedPixel(x,y){
 }
 
 function markPixel(x,y, value){
-    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height){
+    if (x < 0 || y < 0 || x >= imageDataPixels.width || y >= imageDataPixels.height){
         return false;
     }
     puntosVisitados[x][y] = value;
@@ -885,6 +1116,8 @@ function interpolateNextFrameBtn(){
         pinta();
     }
 }
+
+
 /*
 function resizeCanvas(canvas, width, height){
     var newCanvas = document.createElement("canvas");

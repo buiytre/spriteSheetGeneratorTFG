@@ -37,6 +37,22 @@ Spritesheet.prototype.createSprite = function(name){
     }
 };
 
+Spritesheet.prototype.addSprite = function(sprite){
+    var exists = false;
+    this.spriteList.forEach(function(spr){
+        if (spr.name == sprite.name){
+            exists = true;
+        }
+    });
+    if (!exists){
+        var position = this.spriteList.length;
+        this.spriteList[position] = sprite;
+        return true;
+    }else{
+        return false;
+    }
+};
+
 Spritesheet.prototype.deleteSprite = function(spriteName){
     var found = false;
     for (var i=0; i < this.spriteList.length && !found; i++){
@@ -228,8 +244,6 @@ Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
             actualHeight = actualHeight + 1;
         }
     }
-
-    //alert("minimum width =" + minWidth + " minimum height=" + minHeight);
     this.wMax = minWidth;
     this.hMax = minHeight;
     this.fillMetaDataWithArea(minWidth, minHeight);
@@ -257,22 +271,7 @@ Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
         }
         y = y + lastHeight;
     }
-    var textXY = "";
-    var textWidthHeight = "";
-    var spriteInPosition = "";
-    for (var i=0; i < matrix.length;i++){
-        textXY = textXY + "<br />[";
-        textWidthHeight = textWidthHeight + "<br />[";
-        spriteInPosition = spriteInPosition + "<br />[";
-        for (var j=0; j < matrix[i].length; j++){
-            textXY = textXY + "[x:" +  matrix[i][j].x+ " y:" + matrix[i][j].y +"]";
-            textWidthHeight = textWidthHeight + "[width:" +  matrix[i][j].width+ " height:" + matrix[i][j].height +"]";
-            spriteInPosition = spriteInPosition + "[sprite: " + matrix[i][j].value + "]";
-        }
-        textXY = textXY + "]";
-        textWidthHeight= textWidthHeight + "]";
-        spriteInPosition= spriteInPosition + "]";
-    }
+
     for (var i=0; i < matrix.length; i++){
         for (var j=0; j < matrix[i].length; j++){
             if (matrix[i][j].value != -1){
@@ -284,12 +283,6 @@ Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
             }
         }
     }
-    var metadataText = "";
-    for (var i=0; i < this.frameMetaData.length; i++){
-        metadataText = metadataText +"[x:"+ this.frameMetaData[i].pos.x +" y:" + this.frameMetaData[i].pos.y + " indexSprite:" + this.frameMetaData[i].indexSprite + " indexFrame " +  this.frameMetaData[i].indexFrame + " width " + this.frameMetaData[i].width + "x" + this.frameMetaData[i].height + "<br />";
-    }
-    $("#test").html(textXY+"<br />"+textWidthHeight+"<br />"+spriteInPosition+"<br />"+metadataText+"<br /> Area " +  this.wMax + "x"  +this.hMax+"<br />");
-    $("#test").hide();
 };
 
 

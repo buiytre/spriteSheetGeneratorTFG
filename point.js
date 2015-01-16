@@ -25,3 +25,11 @@ Point.prototype.defined = function(){
 Point.prototype.dist= function(d){
     return Math.sqrt((this.x - d.x)*(this.x - d.x)+(this.y - d.y)*(this.y - d.y));
 };
+
+Point.prototype.isInside = function(pointTL,pointBR){
+    if ((this.x >= pointTL.x)  && (this.x <= pointBR.x) && (this.y >= pointBR.y) && (this.y <= pointBR.y)){
+        return true;
+    }else{
+        return false;
+    }
+};
