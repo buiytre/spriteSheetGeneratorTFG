@@ -662,58 +662,70 @@ function isFrameParciallyInArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFram
 }
 
 function newAreasToCheck(areaToCheck,i, frameTL, frameBR, pointLooking){
+//    pinta();
+//    ctx.fillRect(frameTL.x, frameTL.y, frameBR.x - frameTL.x, frameBR.y - frameTL.y);
+//    ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
+    var pActuBR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
     if (isFrameParciallyInArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR) || isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
         if (isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
             //creamos el siguiente cuadrante a la derecha de la imagen
             var quadTL = new Point(frameBR.x+1,frameTL.y);
             var quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
             areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
+//            ctx.strokeRect(quadTL.x, quadTL.y, quadBR.x - quadTL.x, quadBR.y - quadTL.y);
 
             //Creamos el cuadrante que queda abajo del sprite
             var quad2TL =  new Point(areaToCheck[i].pTL.x, frameBR.y+1);
             var quad2BR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
             areaToCheck[areaToCheck.length] = {pTL:quad2TL,pBR:quad2BR};
+//            ctx.strokeRect(quad2TL.x, quad2TL.y, quad2BR.x - quad2TL.x, quad2BR.y - quad2TL.y);
 
             // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
-            areaToCheck[i].pBR.x = frameTL.x-1;
-            areaToCheck[i].pBR.y = frameBR.y;
+            pActuBR.x = frameTL.x-1;
+            pActuBR.y = frameBR.y;
         }else if(isAreaInsideFrame(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
             //Si el frame ocupa el area ya estamos
-            areaToCheck[i].pBR.x = areaToCheck[i].pTL.x; // we are done
-            areaToCheck[i].pBR.y = areaToCheck[i].pTL.y; // we are done
+            pActuBR.x = areaToCheck[i].pTL.x; // we are done
+            pActuBR.y = areaToCheck[i].pTL.y; // we are done
         }else{
             //el frame se sale por algun lado
             //si no sale por la derecha creamos el area a la derecha del frame
             if (!isFrameOutsideRight(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
                 var quadTL  = new Point(frameBR.x+1,pointLooking.y);
                 var quadBR;
-                if (!isFrameOutsideBottom(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+                if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
                     quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
                 }else{
-                    quadBR = new Point(areaToCheck[i].pBR.x, areaToCheck[i].pBR);
+                    quadBR = new Point(areaToCheck[i].pBR.x, areaToCheck[i].pBR.y);
                 }
                 areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
+//                ctx.strokeRect(quadTL.x, quadTL.y, quadBR.x - quadTL.x, quadBR.y - quadTL.y);
+
             }
 
-            if (!isFrameOutsideBottom(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+            if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
                 //Creamos el cuadrante que queda abajo del sprite
                 var quadTL2 = new Point(areaToCheck[i].pTL.x, frameBR.y+1);
                 var quadBR2 = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
                 areaToCheck[areaToCheck.length] = {pTL:quadTL2,pBR:quadBR2};
-
-                areaToCheck[i].pBR.y = frameBR.y; //cambiamos la zona actual para no solaparnos con la nueva zona
+  //              ctx.strokeRect(quadTL2.x, quadTL2.y, quadBR2.x - quadTL2.x, quadBR2.y - quadTL2.y);
+                pActuBR.y = frameBR.y; //cambiamos la zona actual para no solaparnos con la nueva zona
             }
 
-            if (!isFrameOutsideLeft(frameTL,frameBR,areaToCheck[i].pTL,areaToCheck[i].pBR)) {
+            if (!isFrameOutsideLeft(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
                 // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
-                areaToCheck[i].pBR.x = frameTL.x-1;
+                pActuBR.x =  frameTL.x-1;
             }else{
                 //la izquierda del frame le toca a otro area y entonces ya hemos acabado en esta
-                areaToCheck[i].pBR.x = areaToCheck[i].pTL.x; // we are done
-                areaToCheck[i].pBR.y = areaToCheck[i].pTL.y; // we are done
+                pActuBR.x = areaToCheck[i].pTL.x; // we are done
+                pActuBR.y = areaToCheck[i].pTL.y; // we are done
             }
         }
     }
+    areaToCheck[i].pBR.x = pActuBR.x;
+    areaToCheck[i].pBR.y = pActuBR.y;
+    //ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
+
 }
 
 function detectFrames(){
@@ -735,13 +747,26 @@ function detectFrames(){
                         var pointBR = new Point(selectionBR.x, selectionBR.y);
                         var detectedFrame = {TL: pointTL, BR: pointBR, frame:frame};
                         listOfFrames[listOfFrames.length] = detectedFrame;
+//                        pinta();
+  //                      ctx.strokeRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+    //                    ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
                         //creamos nuevas areas alrededor de ese frame
                         newAreasToCheck(areaToCheck,i, selectionTL, selectionBR, pointFound);
-
+      //                  pinta();
+        //                ctx.fillRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+          //              for (var j=i; j < areaToCheck.length;j++){
+            //                ctx.strokeRect(areaToCheck[j].pTL.x, areaToCheck[j].pTL.y, areaToCheck[j].pBR.x - areaToCheck[j].pTL.x, areaToCheck[j].pBR.y - areaToCheck[j].pTL.y);
+              //          }
                         //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
                         for (var j=i+1; j < areaToCheck.length; j++) {
                             newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
                         }
+                //        pinta();
+                  //      ctx.fillRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
+                    //    for (var j=i; j < areaToCheck.length;j++){
+                      //      ctx.strokeRect(areaToCheck[j].pTL.x, areaToCheck[j].pTL.y, areaToCheck[j].pBR.x - areaToCheck[j].pTL.x, areaToCheck[j].pBR.y - areaToCheck[j].pTL.y);
+                       // }
+
                         $("#numFramesDetected").html("Numero de sprites detectados: " + listOfFrames.length);
                     }
                 }
