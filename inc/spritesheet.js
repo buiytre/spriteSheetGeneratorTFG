@@ -91,24 +91,6 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     }
 };
 
-Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
-    var ctx = canvas.getContext('2d');
-    var thisSprite = this.getSpriteByName(spriteName);
-    if (thisSprite != null){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        var x = 0;
-        var y = 0;
-        for (var i=0;thisSprite.existsFrame(i);i++){
-            var image = thisSprite.getFrame(i).getImageFrame();
-            ctx.drawImage(image,x,y,image.width,image.height);
-            x = x + thisSprite.getMaxWidth();
-            if ((x + thisSprite.getMaxWidth()) > canvas.width){
-                x = 0;
-                y = y + thisSprite.getMaxHeight();
-            }
-        }
-    }
-};
 
 /**
  * create a canvas with all the frames of all the sprites in horizontal
@@ -455,24 +437,56 @@ Spritesheet.prototype.getPositionSpriteByName = function(spriteName){
     return null;
 };
 
-Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas) {
+
+Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
+    var ctx = canvas.getContext('2d');
+    var thisSprite = this.getSpriteByName(spriteName);
+    if (thisSprite != null){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        var x = 0;
+        var y = 0;
+        for (var i=0;thisSprite.existsFrame(i);i++){
+            var image = thisSprite.getFrame(i).getImageFrame();
+            ctx.save();
+            ctx.translate(thisSprite.getMaxWidth()/2,thisSprite.getMaxHeight()/2);
+            ctx.translate(x, y);
+            ctx.translate(-image.width/2,-image.height/2);
+            ctx.drawImage(image,0,0);
+            ctx.restore();
+            x = x + thisSprite.getMaxWidth();
+            if ((x + thisSprite.getMaxWidth()) > canvas.width){
+                x = 0;
+                y = y + thisSprite.getMaxHeight();
+            }
+        }
+    }
+};
+
+Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas, yDespl) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
     var spriteSelected = -1;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     if (thisSprite != null){
         var x = 0;
-        var y = 0;
-        var found = false;
-        for (var i=0;thisSprite.existsFrame(i) && !found;i++){
+        var y = - yDespl;
+        for (var i=0;thisSprite.existsFrame(i);i++){
             var image = thisSprite.getFrame(i).getImageFrame();
             var yEnd = y + thisSprite.getMaxHeight();
-            var xEnd = x + thisSprite.getMaxWidth()
+            var xEnd = x + thisSprite.getMaxWidth();
+            ctx.save();
+            ctx.translate(thisSprite.getMaxWidth()/2,thisSprite.getMaxHeight()/2);
+            ctx.translate(x, y);
+            ctx.translate(-image.width/2,-image.height/2);
+            ctx.drawImage(image,0,0);
+            ctx.restore();
+            ctx.save();
             if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
                 ctx.strokeStyle = "#f00";
-                ctx.strokeRect(x, y, image.width, image.height);
-                found = true;
+                ctx.strokeRect(x, y, thisSprite.getMaxWidth(), thisSprite.getMaxHeight());
                 spriteSelected = i;
             }
+            ctx.restore();
             x = x + thisSprite.getMaxWidth();
             if ((x + thisSprite.getMaxWidth()) > canvas.width){
                 x = 0;

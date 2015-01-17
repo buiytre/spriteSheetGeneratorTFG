@@ -357,8 +357,13 @@ function doMouseMove(event) {
             pintaSelection();
             break;
         case FRAMETOSELECT:
+            if (isDownRight) {
+                var incrY = (mousePos.y - startClickRight.y);
+                posImage.y = posImage.y + incrY;
+                if (posImage.y < 0) posImage.y = 0;
+                startClickRight = getMousePos(canvas, event);
+            }
             pinta();
-            sheet.paintSelectionRect($("#spriteList").val(), mousePos, canvas);
             break;
         case FRAMESELECTED:
             if (isDownLeft){
@@ -460,8 +465,8 @@ function pinta(){
             ctx.drawImage(img,0,0);
             break;
         case FRAMETOSELECT:
-            var spriteName =  $("#spriteList").val();
-            sheet.paintFrameSelectionImage(spriteName,canvas);
+            sheet.paintSelectionRect($("#spriteList").val(), mousePos, canvas, posImage.y);
+            //sheet.paintFrameSelectionImage(spriteName,canvas);
             break;
         case FRAMESELECTED:
             if (bTransparencyPreview){
@@ -948,12 +953,16 @@ function transparencyBtn(){
 }
 
 function adjustFrameBtn(){
+    posImage.x = 0;
+    posImage.y = 0;
     modeCanvas = FRAMETOSELECT;
     modeFrame = MODEADJUST;
     pinta();
 }
 
 function editFrameBtn(){
+    posImage.x = 0;
+    posImage.y = 0;
     modeCanvas = FRAMETOSELECT;
     modeFrame = MODEEDIT;
     pinta();
