@@ -26,9 +26,5 @@ Point.prototype.dist= function(d){
 };
 
 Point.prototype.isInside = function(pointTL,pointBR){
-    if ((this.x >= pointTL.x)  && (this.x <= pointBR.x) && (this.y >= pointBR.y) && (this.y <= pointBR.y)){
-        return true;
-    }else{
-        return false;
-    }
+    return ((this.x >= pointTL.x)  && (this.x <= pointBR.x) && (this.y >= pointBR.y) && (this.y <= pointBR.y));
 };

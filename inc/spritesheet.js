@@ -41,19 +41,32 @@ Spritesheet.prototype.createSprite = function(name){
     }
 };
 
-Spritesheet.prototype.addSprite = function(sprite){
+Spritesheet.prototype.addSprite = function(sprite,rename){
     var exists = false;
-    this.spriteList.forEach(function(spr){
-        if (spr.name == sprite.name){
-            exists = true;
+    if (!rename){
+        this.spriteList.forEach(function(spr){
+            if (spr.name == sprite.name){
+                exists = true;
+            }
+        });
+        if (!exists){
+            this.spriteList[this.spriteList.length] = sprite;
+            return true;
+        }else{
+            return false;
         }
-    });
-    if (!exists){
-        var position = this.spriteList.length;
-        this.spriteList[position] = sprite;
-        return true;
     }else{
-        return false;
+        var i = 0;
+        sprite.name = "Sprite " + i;
+        for (var j = 0; j < this.spriteList.length; j++){
+            if (sprite.name == this.spriteList[j].name){
+                j = 0;
+                i = i + 1;
+                sprite.name = "Sprite " + i;
+            }
+        }
+        this.spriteList[this.spriteList.length] = sprite;
+        return true;
     }
 };
 
@@ -169,7 +182,7 @@ Spritesheet.prototype.fillMetaWithNoPosition = function(){
         for (var j=0; this.spriteList[i].existsFrame(j); j++){
             var imageFrame = this.spriteList[i].getFrame(j).getImageFrame();
             var pos = new Point(-1,-1);
-            this.frameMetaData[this.frameMetaData.length] = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};;
+            this.frameMetaData[this.frameMetaData.length] = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};
         }
     }
 };
@@ -377,8 +390,7 @@ Spritesheet.prototype.checkAreaFree = function(matrix, wObj, hObj, i, j) {
         hRemaining = hRemaining - lastHeight;
         nextRow++;
     }
-    if (hRemaining > 0) return false;
-    return true;
+    return !(hRemaining > 0);
 };
 
 Spritesheet.prototype.addColumn = function(matrix,k, width){
@@ -388,8 +400,7 @@ Spritesheet.prototype.addColumn = function(matrix,k, width){
             if (j == k){
                 matrix[i][j].width = width;
             }else{
-                var cell = {width: (matrix[i][j-1].width), height : (matrix[i][j-1].height), isFree : (matrix[i][j-1].isFree), value: (matrix[i][j-1].value), x: (matrix[i][j-1].x), y: (matrix[i][j-1].y)};
-                matrix[i][j] = cell;
+                matrix[i][j] = {width: (matrix[i][j-1].width), height : (matrix[i][j-1].height), isFree : (matrix[i][j-1].isFree), value: (matrix[i][j-1].value), x: (matrix[i][j-1].x), y: (matrix[i][j-1].y)};
                 if ((j-1) == k){
                     matrix[i][j].width = matrix[i][j].width - width;
                 }
@@ -407,8 +418,7 @@ Spritesheet.prototype.addRow = function(matrix,k, height){
             if (i==k){
                 matrix[i][j].height = height;
             }else{
-                var cell = {width: (matrix[i-1][j].width), height : (matrix[i-1][j].height), isFree : (matrix[i-1][j].isFree), value: (matrix[i-1][j].value), x: (matrix[i-1][j].x), y: (matrix[i-1][j].y)};
-                matrix[i][j] = cell;
+                matrix[i][j] = {width: (matrix[i-1][j].width), height : (matrix[i-1][j].height), isFree : (matrix[i-1][j].isFree), value: (matrix[i-1][j].value), x: (matrix[i-1][j].x), y: (matrix[i-1][j].y)};
                 if ((i-1) == k){
                     matrix[i][j].height = matrix[i][j].height - height;
                 }
@@ -419,11 +429,7 @@ Spritesheet.prototype.addRow = function(matrix,k, height){
 };
 
 Spritesheet.prototype.existsSprite = function(spriteName){
-    if (this.getSpriteByName(spriteName) == null){
-        return false;
-    }else{
-        return true;
-    }
+    return !(this.getSpriteByName(spriteName) == null);
 };
 
 Spritesheet.prototype.getSpriteByName = function(spriteName){
@@ -648,7 +654,7 @@ Spritesheet.prototype.getCocos2Dplist = function(){
     text = '        </dict>\r\n';
     text = '    </dict>\r\n';
     text = '</plist>\r\n';
-}
+};
 
 Spritesheet.prototype.interpolateNextFrame = function(spriteName,nFrame){
     var thisSprite = this.getSpriteByName(spriteName);

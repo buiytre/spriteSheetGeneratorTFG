@@ -119,8 +119,7 @@ Sprite.prototype.setPositionFrame = function(n, pos){
 };
 
 Sprite.prototype.existsFrame = function(n){
-    if (this.frameList.length <= n) return false;
-    else return true;
+    return !(this.frameList.length <= n);
 };
 
 /**
@@ -236,8 +235,7 @@ Sprite.prototype.exportToGif = function(){
 Sprite.prototype.getResultGif = function(){
     if (!this.encoderEnd) return -1;
     var binary_gif = this.encoder.stream().getData();
-    var data_url = 'data:image/gif;base64,'+encode64(binary_gif);
-    return data_url;
+    return  'data:image/gif;base64,'+encode64(binary_gif);
 };
 
 Sprite.prototype.getNumberFrames = function(){
@@ -338,7 +336,7 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
         var imageNext = this.frameList[i+1].getImageFrame();
         ctxt.clearRect(0,0,canv.width,canv.height);
         ctxt.drawImage(imageNext,this.pos[i+1].x,this.pos[i+1].y);
-        var dif = frame.compareWith(canv, this.pos[i].x,this.pos[i].y);
+        var dif = frame.compareWithCanvas(canv, this.pos[i].x,this.pos[i].y);
         dif = dif*100;
         //si son iguales contamos el numero de frames iguales y los quitamos de la animación, haremos que el frame actual dure mas
         var count = 0;
@@ -361,12 +359,12 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[i + 1].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[i + 1].x, this.pos[i + 1].y);
-                    dif = frame.compareWith(canv, this.pos[i].x, this.pos[i].y);
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
                 } else {
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[0].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[0].x, this.pos[0].y);
-                    dif = frame.compareWith(canv, this.pos[i].x, this.pos[i].y);
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
                     end = true;
                 }
             }else{
@@ -381,4 +379,9 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
 
 Sprite.prototype.setDefaultMs = function(param){
     this.defaultMs = param;
+};
+
+
+Sprite.prototype.reorganizeByDiffAuto = function(){
+    this.frameList.sort(this.frameList[0].compareWithFrame)
 };

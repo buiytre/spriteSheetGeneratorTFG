@@ -63,7 +63,7 @@ Frame.prototype.isPointAround = function(point,dataOrig,dataDest){
 };
 
 
-Frame.prototype.compareWith = function(canvas,x,y){
+Frame.prototype.compareWithCanvas = function(canvas,x,y){
     var ctx = canvas.getContext('2d');
     var dataDest = ctx.getImageData(0,0,canvas.width,canvas.height);
 
@@ -76,11 +76,35 @@ Frame.prototype.compareWith = function(canvas,x,y){
     var dataOrig = ctx.getImageData(0,0,canvThisImage.width, canvThisImage.height);
 
     var diff = 0;
-    for (var x=0; x<dataOrig.width; x++){
-        for (var y=0; y<dataOrig.height; y++){
-            diff = diff + this.isPointAround(new Point(x,y),dataOrig,dataDest);
+    for (var xData=0; xData<dataOrig.width; xData++){
+        for (var yData=0; yData<dataOrig.height; yData++){
+            diff = diff + this.isPointAround(new Point(xData,yData),dataOrig,dataDest);
         }
     }
 
     return (diff / (dataOrig.width * dataOrig.height));
+};
+
+
+Frame.prototype.compareWithFrame = function(frameA,frameB,xA,yA,xB,yB){
+    var canv = document.createElement('canvas');
+    var ctxt = canv.getContext('2d');
+    var x = 0;
+    var y = 0;
+    if (xA && yA) {
+        canv.width = frameA.width + xA;
+        canv.height = frameA.height + yA;
+        x = xA;
+        y = yA;
+    }else{
+        canv.width = frameA.width;
+        canv.height = frameA.height;
+    }
+    ctxt.clearRect(0,0,canv.width,canv.height);
+    ctxt.drawImage(frameA.getImageFrame(), x, y);
+    if (xB && yB){
+        return frameB.compareWithCanvas(canv,xB,yB);
+    }else{
+        return frameB.compareWithCanvas(canv,0,0);
+    }
 };

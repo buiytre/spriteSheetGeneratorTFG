@@ -498,6 +498,7 @@ function saveFrameToSprite(ori, dest){
  * Devuelve un frame desde ori a dest del canvas principal
  * @param ori
  * @param dest
+ * @param canv
  * @returns {Frame}
  */
 function getSelectedFrame(ori, dest, canv){
@@ -512,9 +513,8 @@ function getSelectedFrame(ori, dest, canv){
 
     newCanvas.getContext("2d").putImageData(imgData,0,0);
     var dataURL = newCanvas.toDataURL("image/png");
-    var newFrame = new Frame(dataURL);
 
-    return newFrame;
+    return (new Frame(dataURL));
 }
 
 /**
@@ -627,11 +627,7 @@ function isAreaInsideFrame(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) 
 }
 
 function isFrameOutsideLeft(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
-    if ((pointAreaTL.x > pointFrameTL.x)) {
-        return true;
-    }else{
-        return false;
-    }
+    return ((pointAreaTL.x > pointFrameTL.x));
 }
 
 function isFrameOutsideRight(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
@@ -644,19 +640,11 @@ function isFrameOutsideRight(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR
 }
 
 function isFrameOutsideTop(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
-    if (pointAreaTL.y  > pointFrameTL.y){
-        return true;
-    }else{
-        return false;
-    }
+    return (pointAreaTL.y  > pointFrameTL.y);
 }
 
 function isFrameOutsideBottom(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
-    if (pointAreaBR.y < pointFrameBR.y){
-        return true;
-    }else{
-        return false;
-    }
+    return (pointAreaBR.y < pointFrameBR.y);
 }
 
 function isFrameParciallyInArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR) {
@@ -746,7 +734,7 @@ function detectFrames(){
         var canvasAutoDetect = document.createElement("canvas");
         var ctxAutoDetect = canvasAutoDetect.getContext('2d');
         canvasAutoDetect.width = img.width;
-        canvasAutoDetect.height = img.height
+        canvasAutoDetect.height = img.height;
         ctxAutoDetect.drawImage(img,0,0);
         var imageDataToDetect = ctxAutoDetect.getImageData(0,0,canvasAutoDetect.width,canvasAutoDetect.height);
         areaToCheck[0] = {pTL:new Point(0,0), pBR:new Point(imageDataToDetect.width,imageDataToDetect.height)};
@@ -769,8 +757,7 @@ function detectFrames(){
                         var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
                         var pointTL = new Point(selectionTL.x, selectionTL.y);
                         var pointBR = new Point(selectionBR.x, selectionBR.y);
-                        var detectedFrame = {TL: pointTL, BR: pointBR, frame:frame};
-                        listOfFrames[listOfFrames.length] = detectedFrame;
+                        listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame:frame};
 
 //                        pinta();
   //                      ctx.strokeRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
@@ -849,7 +836,7 @@ function autoDetectAnimations(){
             ctxt.drawImage(frameImage,0,0);
             for (var j=i+1; j < listOfFrames.length; j++){
                 if (frameInSprite[j] == -1) {
-                    var dif = listOfFrames[j].frame.compareWith(canv, 0, 0);
+                    var dif = listOfFrames[j].frame.compareWithCanvas(canv, 0, 0);
                     dif = dif*100;
                     if (dif <= percentDifference) {
                         frameInSprite[j] = spritesIntroducidos;
@@ -861,8 +848,10 @@ function autoDetectAnimations(){
         }
     }
 
+
     for (var i=0; i < listaSprites.length; i++) {
-        if (sheet.addSprite(listaSprites[i])) {
+        listaSprites[i].reorganizeByDiffAuto();
+        if (sheet.addSprite(listaSprites[i],true)) {
             $("#spriteList").append('<option value="' + listaSprites[i].getName() + '">' + listaSprites[i].getName() + '</option>');
             $("#spriteName").val('');
         }
@@ -973,11 +962,7 @@ function changePreview(){
 }
 
 function transparencyBtn(){
-    if($("#transparency").is(':checked')) {
-        bTransparencyPreview = true;
-    }else{
-        bTransparencyPreview = false;
-    }
+    bTransparencyPreview = ($("#transparency").is(':checked'));
     pinta();
     pintaSelection();
 }
@@ -1010,11 +995,7 @@ function saveAdjustedFrameBtn(){
     imageSprAdj = sheet.getSelectionImage(spriteName,selectedFrame);
     posSprAdj.x = 0;
     posSprAdj.y = 0;
-    if($("#transparency").is(':checked')) {
-        bTransparencyPreview = true;
-    }else{
-        bTransparencyPreview = false;
-    }
+    bTransparencyPreview = ($("#transparency").is(':checked'));
     pinta();
     pintaSelection();
     changePreview();
