@@ -525,11 +525,13 @@ window.onload= function(){
     ctx = canvas.getContext('2d');
     canvas.width = $('#preview').width();
     canvas.height = $('#preview').height();
-    tranparencyMatrix = _.range(canvas.width).map(function(){
-        return _.range(canvas.height).map(function(){
-            return true;
-        });
-    });
+    transparencyMatrix = new Array();
+    for(var i=0;i<canvas.width;i++){
+        transparencyMatrix[i]=new Array();
+        for(var j=0;j<canvas.height;j++){
+            transparencyMatrix[i][j]=true;
+        }
+    }
     canvas.addEventListener('click',nullFunction,false);
     canvas.addEventListener('contextmenu',nullFunction,false);
     canvas.addEventListener('mousedown', nullFunction, false);
@@ -1097,11 +1099,14 @@ function deleteFrameBtn(){
 }
 
 function getSelectionAroundPoint(point, imageData){
-    puntosVisitados = _.range(imageData.width).map(function(){
-        return _.range(imageData.height).map(function(){
-            return false;
-        });
-    });
+    puntosVisitados = new Array();
+    for(var i=0;i<imageData.width;i++){
+        puntosVisitados[i]=new Array();
+        for(var j=0;j<imageData.height;j++){
+            puntosVisitados[i][j]=false;
+        }
+    }
+
     point.x = Math.round(point.x);
     point.y = Math.round(point.y);
     markPixel(point.x, point.y,true,imageData);
