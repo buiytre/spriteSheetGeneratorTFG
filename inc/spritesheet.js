@@ -144,7 +144,6 @@ Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
             countFrames++;
         }
     }
-    this.frameSpriteSheetOrganized = true;
 };
 
 Spritesheet.prototype.orderMetaByHeightDesc = function(a,b){
@@ -170,8 +169,7 @@ Spritesheet.prototype.fillMetaWithNoPosition = function(){
         for (var j=0; this.spriteList[i].existsFrame(j); j++){
             var imageFrame = this.spriteList[i].getFrame(j).getImageFrame();
             var pos = new Point(-1,-1);
-            var frameMeta = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};
-            this.frameMetaData[this.frameMetaData.length] = frameMeta;
+            this.frameMetaData[this.frameMetaData.length] = {indexSprite: i, indexFrame: j, pos: pos, width: (imageFrame.width+1), height: (imageFrame.height+1)};;
         }
     }
 };
@@ -194,8 +192,7 @@ Spritesheet.prototype.organizeSpriteSheetShelf = function(maxWidth){
             //creamos un nuevo nivel
             var framesInLevel = new Array();
             framesInLevel[0] = i;
-            var level = {height: (this.frameMetaData[i].height+2), width: (this.frameMetaData[i].width+2), frames: framesInLevel};
-            levels[j] = level;
+            levels[j] = {height: (this.frameMetaData[i].height+2), width: (this.frameMetaData[i].width+2), frames: framesInLevel};
         }
     }
 
@@ -205,15 +202,12 @@ Spritesheet.prototype.organizeSpriteSheetShelf = function(maxWidth){
         if (this.wMax < levels[i].width) this.wMax = levels[i].width;
         var x = 0;
         for (var j = 0; j < levels[i].frames.length; j++){
-            var newPos = new Point((x+1),(y+1));
-            this.frameMetaData[levels[i].frames[j]].pos = newPos;
+            this.frameMetaData[levels[i].frames[j]].pos = new Point((x+1),(y+1));
             x = x + 2 + this.frameMetaData[levels[i].frames[j]].width;
         }
         y = y + 2 + levels[i].height;
     }
     this.hMax = y;
-
-    this.frameSpriteSheetOrganized = true;
 };
 
 Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
@@ -244,8 +238,7 @@ Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
         } else {
             var  matrix = [];
             matrix[0] = [];
-            var cell = {width:actualWidth, height: actualHeight, isFree: true, value: -1, x:0,y:0};
-            matrix[0][0] = cell;
+            matrix[0][0] = {width:actualWidth, height: actualHeight, isFree: true, value: -1, x:0,y:0};
             if (this.fitAllItems(matrix)) {
                 if ((actualWidth * actualHeight) < (minWidth * minHeight)) {
                     minWidth = actualWidth;
@@ -264,15 +257,13 @@ Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
     this.hMax = minHeight;
     this.fillMetaDataWithArea(minWidth, minHeight);
 
-    this.frameSpriteSheetOrganized = true;
 
 };
 
 Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
     var  matrix = [];
     matrix[0] = [];
-    var cell = {width:w, height: h, isFree: true, value: -1, x:0,y:0};
-    matrix[0][0] = cell;
+    matrix[0][0] = {width:w, height: h, isFree: true, value: -1, x:0,y:0};
     this.fitAllItems(matrix);
 
     var y = 0;
@@ -293,8 +284,7 @@ Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
             if (matrix[i][j].value != -1){
                 var pos = this.frameMetaData[matrix[i][j].value].pos;
                 if (pos.x == -1  && pos.y == -1){
-                    var newPos = new Point(matrix[i][j].x,matrix[i][j].y);
-                    this.frameMetaData[matrix[i][j].value].pos = newPos;
+                    this.frameMetaData[matrix[i][j].value].pos =  new Point(matrix[i][j].x,matrix[i][j].y);
                 }
             }
         }
@@ -305,7 +295,7 @@ Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
 Spritesheet.prototype.fitAllItems = function(matrix){
     var fit = true;
     for (var i = 0; fit && (i < this.frameMetaData.length); i++){
-        var fit = false;
+        fit = false;
         for (var j=0; !fit && (j < matrix.length); j++){
             for (var k=0; !fit && (k < matrix[j].length);k++){
                 if (matrix[j][k].isFree) {
@@ -373,7 +363,6 @@ Spritesheet.prototype.fitAllItems = function(matrix){
 
 Spritesheet.prototype.checkAreaFree = function(matrix, wObj, hObj, i, j) {
     var hRemaining = hObj;
-    var nextCol = j;
     var nextRow = i;
     while (nextRow < matrix.length && hRemaining > 0){
         var wRemaining = wObj;
@@ -391,26 +380,6 @@ Spritesheet.prototype.checkAreaFree = function(matrix, wObj, hObj, i, j) {
     if (hRemaining > 0) return false;
     return true;
 };
-/*
-Spritesheet.prototype.checkRightWidth = function(matrix, wObj, i, j){
-    var wRight = 0;
-    var nextCol = j;
-    while (wRight < wObj && nextCol < matrix[i].length && matrix[i][nextCol].isFree ){
-        wRight = wRight + matrix[i][nextCol].width;
-        nextCol = nextCol + 1;
-    }
-    return wRight;
-};
-
-Spritesheet.prototype.checkBotHeight = function(matrix,hObj,i,j){
-    var hBot = 0;
-    var nextHeight = i;
-    while (hBot < hObj && nextHeight < matrix.length && matrix[nextHeight][j].isFree){
-        hBot = hBot + matrix[nextHeight][j].height;
-        nextHeight = nextHeight + 1;
-    }
-    return hBot;
-};*/
 
 Spritesheet.prototype.addColumn = function(matrix,k, width){
     for (var i=0; i < matrix.length;i++){

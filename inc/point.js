@@ -18,8 +18,7 @@ Point.prototype.reset = function(){
 
 
 Point.prototype.defined = function(){
-    if (this.x == "undefined" || this.y == "undefined") return false;
-    return true;
+    return !(this.x == "undefined" || this.y == "undefined");
 };
 
 Point.prototype.dist= function(d){
