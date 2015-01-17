@@ -364,7 +364,7 @@ function doMouseMove(event) {
             break;
         case FRAMETOSELECT:
             pinta();
-            sheet.paintSelection($("#spriteList").val(), mousePos, canvas);
+            sheet.paintSelectionRect($("#spriteList").val(), mousePos, canvas);
             break;
         case FRAMESELECTED:
             if (isDownLeft){
@@ -467,7 +467,7 @@ function pinta(){
             break;
         case FRAMETOSELECT:
             var spriteName =  $("#spriteList").val();
-            sheet.paintFrameSelection(spriteName,canvas);
+            sheet.paintFrameSelectionImage(spriteName,canvas);
             break;
         case FRAMESELECTED:
             if (bTransparencyPreview){
