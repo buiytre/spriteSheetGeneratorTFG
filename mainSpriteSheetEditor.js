@@ -35,9 +35,6 @@ var posImage = new Point; //Posicion de la imagen
 var currentScale = 1;   //ESCALA del zoom
 
 //*******control mouse******
-var mouseMode = 0;
-const MOUSESELECTIONMODE = 1;
-const MOUSEMOVEMODE = 2;
 var startClickLeft = new Point;         //Click inicial del boton izquierdo del mouse
 var startClickRight = new Point;        //Click inicial del boton derecho del mouse
 var mousePos = new Point;               //Posicion actual del mouse
@@ -73,10 +70,11 @@ var busy = false;
  * @param e
  * @returns {{x: number, y: number}}
  */
-function getMousePos(cv, e) {
+function getMousePos(cv,e){
     var rect = cv.getBoundingClientRect();
     return {x: e.clientX - rect.left, y: e.clientY - rect.top};
 }
+
 
 /**
  * evento de mantener el raton pulsado
@@ -101,11 +99,7 @@ function doMouseDown(event){
         default:
             break;
     }
-    switch (mouseMode){
-        case MOUSESELECTIONMODE:
-            checkMoveAndResizeSelection();
-            break;
-    }
+    checkMoveAndResizeSelection();
 }
 
 function invertSelectionTLBR(){
@@ -271,7 +265,7 @@ function doMouseUp(event){
 function doMouseDblClick(event){
     switch (event.which){
     case 1:
-         if (modeCanvas == IMPORTEDIMAGE && mouseMode == MOUSESELECTIONMODE){
+         if (modeCanvas == IMPORTEDIMAGE){
                 if (transparentColor){
                     getSelectionAroundPoint(mousePos,imageDataPixels);
                     pinta();
@@ -294,7 +288,6 @@ function selectFrame(){
         var p = sheet.getPositionFrame(spriteName,selectedFrame);
         posFrame.x = p.x;
         posFrame.y = p.y;
-        mouseMode = MOUSEMOVEMODE;
         modeCanvas = FRAMESELECTED;
     }
     pinta();
@@ -312,55 +305,56 @@ function doMouseMove(event) {
     $("#coords").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
     switch (modeCanvas) {
         case IMPORTEDIMAGE:
-            switch (mouseMode) {
-                case MOUSEMOVEMODE:
-                    if (isDownLeft) {
-                        posImage.x = posImage.x + (mousePos.x - startClickLeft.x);
-                        posImage.y = posImage.y + (mousePos.y - startClickLeft.y);
-                        pinta();
-                        imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-                        startClickLeft = getMousePos(canvas, event);
-                    }
-                    break;
-                case MOUSESELECTIONMODE:
-                    invertSelectionTLBR();
-                    changeCursorMoveOrSelection();
-                    if (isDownLeft) {
-                        if (selectionMove || selectionResize) {
-                            var incrementX = (mousePos.x - startClickLeft.x);
-                            var incrementY = (mousePos.y - startClickLeft.y);
-                            startClickLeft = getMousePos(canvas, event);
-                            if (selectionMove) {
-                                selectionTL.x = selectionTL.x + incrementX;
-                                selectionBR.x = selectionBR.x + incrementX;
-                                selectionTL.y = selectionTL.y + incrementY;
-                                selectionBR.y = selectionBR.y + incrementY;
-                            } else {
-                                if (selectionResizeLeft) {
-                                    selectionTL.x = selectionTL.x + incrementX;
-                                }
-                                if (selectionResizeRight) {
-                                    selectionBR.x = selectionBR.x + incrementX;
-
-                                }
-                                if (selectionResizeTop) {
-                                    selectionTL.y = selectionTL.y + incrementY;
-                                }
-                                if (selectionResizeBot) {
-                                    selectionBR.y = selectionBR.y + incrementY;
-                                }
-                            }
-                        } else { // crear selection
-                            selectionTL.x = startClickLeft.x;
-                            selectionTL.y = startClickLeft.y;
-                            selectionBR.x = mousePos.x;
-                            selectionBR.y = mousePos.y;
-                        }
-                        pinta();
-                        pintaSelection();
-                    }
-                    break;
+            if (isDownRight) {
+                var incrX = (mousePos.x - startClickRight.x);
+                var incrY = (mousePos.y - startClickRight.y);
+                posImage.x = posImage.x + incrX;
+                posImage.y = posImage.y + incrY;
+                if (selectionTL.x && selectionTL.y && selectionBR.x && selectionBR.y){
+                    selectionTL.x = selectionTL.x + incrX;
+                    selectionTL.y = selectionTL.y + incrY;
+                    selectionBR.x = selectionBR.x + incrX;
+                    selectionBR.y = selectionBR.y + incrY;
+                }
+                imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+                startClickRight = getMousePos(canvas, event);
             }
+            invertSelectionTLBR();
+            changeCursorMoveOrSelection();
+            if (isDownLeft) {
+                if (selectionMove || selectionResize) {
+                    var incrementX = (mousePos.x - startClickLeft.x);
+                    var incrementY = (mousePos.y - startClickLeft.y);
+                    startClickLeft = getMousePos(canvas, event);
+                    if (selectionMove) {
+                        selectionTL.x = selectionTL.x + incrementX;
+                        selectionBR.x = selectionBR.x + incrementX;
+                        selectionTL.y = selectionTL.y + incrementY;
+                        selectionBR.y = selectionBR.y + incrementY;
+                    } else {
+                        if (selectionResizeLeft) {
+                            selectionTL.x = selectionTL.x + incrementX;
+                        }
+                        if (selectionResizeRight) {
+                            selectionBR.x = selectionBR.x + incrementX;
+
+                        }
+                        if (selectionResizeTop) {
+                            selectionTL.y = selectionTL.y + incrementY;
+                        }
+                        if (selectionResizeBot) {
+                            selectionBR.y = selectionBR.y + incrementY;
+                        }
+                    }
+                } else { // crear selection
+                    selectionTL.x = startClickLeft.x;
+                    selectionTL.y = startClickLeft.y;
+                    selectionBR.x = mousePos.x;
+                    selectionBR.y = mousePos.y;
+                }
+            }
+            pinta();
+            pintaSelection();
             break;
         case FRAMETOSELECT:
             pinta();
@@ -523,6 +517,7 @@ function getSelectedFrame(ori, dest, canv){
 window.onload= function(){
     canvas = document.getElementById('preview');
     ctx = canvas.getContext('2d');
+
     canvas.width = $('#preview').width();
     canvas.height = $('#preview').height();
     transparencyMatrix = new Array();
@@ -571,10 +566,13 @@ window.onload= function(){
  */
 function loadImage(){
     currentScale = 1;
-    mouseMode = MOUSESELECTIONMODE;
     modeCanvas = IMPORTEDIMAGE;
     posImage = new Point(0,0);
    // clear();
+    selectionTL.x = undefined;
+    selectionTL.y = undefined;
+    selectionBR.x = undefined;
+    selectionBR.y = undefined;
     pinta();
     transparentColor = false;
     imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -742,17 +740,17 @@ function detectFrames(){
             for (var y=areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y;y++){
                 for (var x=areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++){
                     if (!isTransparent(x,y, imageDataToDetect)){
-                        pinta();
-                        ctx.save();
-                        ctx.translate(canvas.width/2,canvas.height/2);
-                        ctx.translate(posImage.x, posImage.y);
-                        ctx.scale(currentScale,currentScale);
-                        ctx.translate(-img.width/2,-img.height/2);
-                        ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
+//                        pinta();
+//                        ctx.save();
+//                        ctx.translate(canvas.width/2,canvas.height/2);
+//                        ctx.translate(posImage.x, posImage.y);
+//                        ctx.scale(currentScale,currentScale);
+//                        ctx.translate(-img.width/2,-img.height/2);
+//                        ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
                         var pointFound = new Point(x,y);
                         getSelectionAroundPoint(pointFound,imageDataToDetect);
                         pintaSelection();
-                        ctx.restore();
+//                        ctx.restore();
                         //añadimos el frame a la lista de frames
                         var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
                         var pointTL = new Point(selectionTL.x, selectionTL.y);
@@ -859,31 +857,12 @@ function autoDetectAnimations(){
 }
 
 /**
- * click en el boton de seleccion inicializa el modo seleccion
- */
-function selectionModeBtn() {
-//    selectionTL.reset();
-//    selectionBR.reset();
-    mouseMode = MOUSESELECTIONMODE;
-    modeCanvas = IMPORTEDIMAGE;
-    pinta();
-    pintaSelection();
-}
-
-/**
- * click en el boton de mover (inicializa el modo mover)
- */
-function moveModeBtn(){
-    mouseMode = MOUSEMOVEMODE;
-    pinta();
-}
-
-/**
  * click en el boton Zoom in, hace que se amplie el zoom
  */
 function zoomInBtn(){
     currentScale += 0.1;
     pinta();
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
 }
 
 /**
@@ -892,6 +871,7 @@ function zoomInBtn(){
 function zoomOutBtn(){
     currentScale -= 0.1;
     pinta();
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
 }
 
 /**
