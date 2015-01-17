@@ -273,7 +273,7 @@ function doMouseDblClick(event){
     case 1:
          if (modeCanvas == IMPORTEDIMAGE && mouseMode == MOUSESELECTIONMODE){
                 if (transparentColor){
-                    getSelectionAroundPoint(mousePos);
+                    getSelectionAroundPoint(mousePos,imageDataPixels);
                     pinta();
                     pintaSelection();
                 }
@@ -403,6 +403,11 @@ function pintaSelection() {
 
                 }
             }else if (modeSelection == SELECTIONAUTO){
+                ctx.translate(canvas.width/2,canvas.height/2);
+                ctx.translate(posImage.x, posImage.y);
+                ctx.scale(currentScale,currentScale);
+                ctx.translate(-img.width/2,-img.height/2);
+
                 ctx.fillStyle = 'rgba(255,0,0,0.1)';
                 ctx.strokeStyle = '#000000';
                 for (var i=0; i < listOfFrames.length; i++){
@@ -457,7 +462,8 @@ function pinta(){
             ctx.translate(canvas.width/2,canvas.height/2);
             ctx.translate(posImage.x, posImage.y);
             ctx.scale(currentScale,currentScale);
-            ctx.drawImage(img,-img.width/2,-img.height/2);
+            ctx.translate(-img.width/2,-img.height/2);
+            ctx.drawImage(img,0,0);
             break;
         case FRAMETOSELECT:
             var spriteName =  $("#spriteList").val();
@@ -482,7 +488,7 @@ function pinta(){
  */
 function saveFrameToSprite(ori, dest){
     //guardar el frame al sprite
-    var frameTmp = getSelectedFrame(ori,dest);
+    var frameTmp = getSelectedFrame(ori,dest, canvas);
     var spriteName = $("#spriteList").val();
     sheet.addFrameToSprite(spriteName, frameTmp);
     changePreview();
@@ -494,10 +500,11 @@ function saveFrameToSprite(ori, dest){
  * @param dest
  * @returns {Frame}
  */
-function getSelectedFrame(ori, dest){
-    var width = dest.x - ori.x;
-    var height = dest.y - ori.y;
-    var imgData = ctx.getImageData(ori.x,ori.y,width,height);
+function getSelectedFrame(ori, dest, canv){
+    var cont = canv.getContext('2d');
+    var width = (dest.x+1) - ori.x;
+    var height = (dest.y+1) - ori.y;
+    var imgData = cont.getImageData(ori.x,ori.y,width,height);
 
     var newCanvas = document.createElement("canvas");
     newCanvas.width = width;
@@ -590,9 +597,9 @@ function detectTransparentColor(){
     }
 }
 
-function isTransparent(x,y){
-    var pixelCoord = x*4+y*imageDataPixels.width*4;
-    if (imageDataPixels.data[pixelCoord+IMGDATAALPHA] == 0){
+function isTransparent(x,y, dataImage){
+    var pixelCoord = x*4+y*dataImage.width*4;
+    if (dataImage.data[pixelCoord+IMGDATAALPHA] == 0){
         return true;
     }else{
         return false;
@@ -734,19 +741,35 @@ function detectFrames(){
         listOfFrames = new Array();
         var areaToCheck = new Array();
         $("#numFramesDetected").html("Numero de sprites detectados: 0");
-        areaToCheck[0] = {pTL:new Point(0,0), pBR:new Point(imageDataPixels.width,imageDataPixels.height)};
+        var canvasAutoDetect = document.createElement("canvas");
+        var ctxAutoDetect = canvasAutoDetect.getContext('2d');
+        canvasAutoDetect.width = img.width;
+        canvasAutoDetect.height = img.height
+        ctxAutoDetect.drawImage(img,0,0);
+        var imageDataToDetect = ctxAutoDetect.getImageData(0,0,canvasAutoDetect.width,canvasAutoDetect.height);
+        areaToCheck[0] = {pTL:new Point(0,0), pBR:new Point(imageDataToDetect.width,imageDataToDetect.height)};
         for (var i=0; i < areaToCheck.length; i++){
             for (var y=areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y;y++){
                 for (var x=areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++){
-                    if (!isTransparent(x,y)){
+                    if (!isTransparent(x,y, imageDataToDetect)){
+                        pinta();
+                        ctx.save();
+                        ctx.translate(canvas.width/2,canvas.height/2);
+                        ctx.translate(posImage.x, posImage.y);
+                        ctx.scale(currentScale,currentScale);
+                        ctx.translate(-img.width/2,-img.height/2);
+                        ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
                         var pointFound = new Point(x,y);
-                        getSelectionAroundPoint(pointFound);
+                        getSelectionAroundPoint(pointFound,imageDataToDetect);
+                        pintaSelection();
+                        ctx.restore();
                         //añadimos el frame a la lista de frames
-                        var frame = getSelectedFrame(selectionTL, selectionBR);
+                        var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
                         var pointTL = new Point(selectionTL.x, selectionTL.y);
                         var pointBR = new Point(selectionBR.x, selectionBR.y);
                         var detectedFrame = {TL: pointTL, BR: pointBR, frame:frame};
                         listOfFrames[listOfFrames.length] = detectedFrame;
+
 //                        pinta();
   //                      ctx.strokeRect(selectionTL.x, selectionTL.y, selectionBR.x - selectionTL.x, selectionBR.y - selectionTL.y);
     //                    ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
@@ -793,10 +816,15 @@ function detectFrames(){
 }
 
 
+
 function autoDetectAnimations(){
     var frameInSprite = new Array;
     var listaSprites = new Array;
     var spritesIntroducidos = 0;
+    var percentDifference = $("#percentDifferenceText").val();
+    if (!percentDifference){
+        percentDifference = 5;  //by default 5
+    }
     var maxWidth = 0;
     var maxHeight = 0;
     for (var i=0; i < listOfFrames.length; i++){
@@ -820,7 +848,8 @@ function autoDetectAnimations(){
             for (var j=i+1; j < listOfFrames.length; j++){
                 if (frameInSprite[j] == -1) {
                     var dif = listOfFrames[j].frame.compareWith(canv, 0, 0);
-                    if (dif < 5) {
+                    dif = dif*100;
+                    if (dif <= percentDifference) {
                         frameInSprite[j] = spritesIntroducidos;
                         listaSprites[spritesIntroducidos].addFrame(listOfFrames[j].frame);
                     }
@@ -972,7 +1001,7 @@ function saveAdjustedFrameBtn(){
     ini.y = posFrame.y;
     fin.x = ini.x + imageSprAdj.width;
     fin.y = ini.y + imageSprAdj.height;
-    var frameTmp = getSelectedFrame(ini,fin);
+    var frameTmp = getSelectedFrame(ini,fin, canvas);
     var spriteName = $("#spriteList").val();
     sheet.modifyFrameN(spriteName, selectedFrame, frameTmp);
     sheet.setPositionFrame(spriteName, selectedFrame, posFrame);
@@ -1067,15 +1096,15 @@ function deleteFrameBtn(){
     }
 }
 
-function getSelectionAroundPoint(point){
-    puntosVisitados = _.range(imageDataPixels.width).map(function(){
-        return _.range(imageDataPixels.height).map(function(){
+function getSelectionAroundPoint(point, imageData){
+    puntosVisitados = _.range(imageData.width).map(function(){
+        return _.range(imageData.height).map(function(){
             return false;
         });
     });
     point.x = Math.round(point.x);
     point.y = Math.round(point.y);
-    markPixel(point.x, point.y,true);
+    markPixel(point.x, point.y,true,imageData);
     var minX = point.x - 1;
     var maxX = point.x + 1;
     var minY = point.y - 1;
@@ -1086,8 +1115,8 @@ function getSelectionAroundPoint(point){
         finish = true;
         for (var y = minY; y <= maxY; y++){
             for (var x = minX; x <= maxX; x++){
-                if (!pixelIsMarked(x,y) && !isTransparent(x,y) && isNeighbourOfMarkedPixel(x,y)){
-                    if (markPixel(x,y,true)){
+                if (!pixelIsMarked(x,y, imageData) && !isTransparent(x,y,imageData) && isNeighbourOfMarkedPixel(x,y, imageData)){
+                    if (markPixel(x,y,true,imageData)){
                         finish = false;
                         if (x - 1 < minX) minX = x - 1;
                         if (x + 1 > maxX) maxX = x + 1;
@@ -1105,24 +1134,24 @@ function getSelectionAroundPoint(point){
 }
 
 
-function pixelIsMarked(x,y){
-    if (x < 0 || y < 0 || x >= imageDataPixels.width || y >= imageDataPixels.height){
+function pixelIsMarked(x,y,imageData){
+    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
         return false;
     }
     return puntosVisitados[x][y];
 }
 
-function isNeighbourOfMarkedPixel(x,y){
+function isNeighbourOfMarkedPixel(x,y,imageData){
     return (
-           pixelIsMarked(x - 1,y)
-        || pixelIsMarked(x + 1,y)
-        || pixelIsMarked(x, y - 1)
-        || pixelIsMarked(x, y + 1)
+           pixelIsMarked(x - 1,y, imageData)
+        || pixelIsMarked(x + 1,y, imageData)
+        || pixelIsMarked(x, y - 1, imageData)
+        || pixelIsMarked(x, y + 1, imageData)
     );
 }
 
-function markPixel(x,y, value){
-    if (x < 0 || y < 0 || x >= imageDataPixels.width || y >= imageDataPixels.height){
+function markPixel(x,y, value, imageData){
+    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
         return false;
     }
     puntosVisitados[x][y] = value;

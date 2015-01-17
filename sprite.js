@@ -339,7 +339,7 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
         ctxt.clearRect(0,0,canv.width,canv.height);
         ctxt.drawImage(imageNext,this.pos[i+1].x,this.pos[i+1].y);
         var dif = frame.compareWith(canv, this.pos[i].x,this.pos[i].y);
-
+        dif = dif*100;
         //si son iguales contamos el numero de frames iguales y los quitamos de la animación, haremos que el frame actual dure mas
         var count = 0;
         var end = false;

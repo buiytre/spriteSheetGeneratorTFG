@@ -4,6 +4,10 @@
  *  @version: 27/11/2014
  */
 
+const ORGANIZEBYSHELF = 1;
+const ORGANIZEHORIZONTAL = 2;
+const ORGANIZELEFTTOP = 3;
+
 /**
  *
  * @constructor
@@ -106,10 +110,22 @@ Spritesheet.prototype.getSpriteSheet = function(){
     return newCanvas;
 };
 
-Spritesheet.prototype.organizeFunction = function(){
-    //this.organizeSpriteSheetHorizontalOnly();
-    //this.organizeSpriteSheetFFDH(1024);
-    this.organizeSpriteSheetLeftTop();
+Spritesheet.prototype.organizeFunction = function(type){
+    switch (type){
+        case ORGANIZELEFTTOP:
+            this.organizeSpriteSheetLeftTop();
+            break;
+        case ORGANIZEBYSHELF:
+            this.organizeSpriteSheetShelf(1024);
+            break;
+        case ORGANIZEHORIZONTAL:
+            this.organizeSpriteSheetHorizontalOnly();
+            break;
+        default:
+            this.organizeSpriteSheetLeftTop();
+            break;
+    }
+
 };
 
 Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
@@ -160,7 +176,7 @@ Spritesheet.prototype.fillMetaWithNoPosition = function(){
     }
 };
 
-Spritesheet.prototype.organizeSpriteSheetFFDH = function(maxWidth){
+Spritesheet.prototype.organizeSpriteSheetShelf = function(maxWidth){
     this.fillMetaWithNoPosition();
     this.frameMetaData.sort(this.orderMetaByHeightAsc);
 
