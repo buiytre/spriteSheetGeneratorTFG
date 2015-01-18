@@ -780,7 +780,7 @@ function detectFrames(){
                             if (!isTransparent(x, y, imageDataToDetect)) {
                                 var pointFound = new Point(x, y);
                                 getSelectionAroundPoint(pointFound, imageDataToDetect);
-                                pintaSelection();
+                                //pintaSelection();
                                 //añadimos el frame a la lista de frames
                                 var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
                                 var pointTL = new Point(selectionTL.x, selectionTL.y);
