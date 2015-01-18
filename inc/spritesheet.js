@@ -508,12 +508,12 @@ Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas,
     return spriteSelected;
 };
 
-Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos){
+Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos, yDespl){
     var thisSprite = this.getSpriteByName(spriteName);
     this.spriteSelected = -1;
     if (thisSprite != null){
         var x = 0;
-        var y = 0;
+        var y = -yDespl;
         var found = false;
         for (var i=0;thisSprite.existsFrame(i) && !found;i++){
             var image = thisSprite.getFrame(i).getImageFrame();

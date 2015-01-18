@@ -287,7 +287,7 @@ function doMouseDblClick(event){
 }
 
 function marcaFrame(){
-    selectedFrame = sheet.marcaFrameSelected(spriteSelectedName, mousePos);
+    selectedFrame = sheet.marcaFrameSelected(spriteSelectedName, mousePos,posImage.y);
     pinta();
     pintaSelection();
 }
