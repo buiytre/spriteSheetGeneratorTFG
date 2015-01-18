@@ -393,10 +393,9 @@ function doMouseMove(event) {
                         break;
                 }
                 startClickLeft = getMousePos(canvas, event);
-                pinta();
-                pintaSelection();
-
             }
+            pinta();
+            pintaSelection();
             break;
     }
 }
@@ -1041,19 +1040,27 @@ function transparencyBtn(){
 }
 
 function adjustFrameBtn(){
-    posImage.x = 0;
-    posImage.y = 0;
-    modeCanvas = FRAMETOSELECT;
-    modeFrame = MODEADJUST;
-    pinta();
+    putCanvasInModeFrame();
+    if (spriteSelectedName != -1 || selectedFrame != -1) {
+        posImage.x = 0;
+        posImage.y = 0;
+        modeCanvas = FRAMESELECTED;
+        modeFrame = MODEADJUST;
+        pinta();
+        pintaSelection();
+    }
 }
 
 function editFrameBtn(){
-    posImage.x = 0;
-    posImage.y = 0;
-    modeCanvas = FRAMETOSELECT;
-    modeFrame = MODEEDIT;
-    pinta();
+    putCanvasInModeFrame();
+    if (spriteSelectedName != -1 || selectedFrame != -1) {
+        posImage.x = 0;
+        posImage.y = 0;
+        modeCanvas = FRAMESELECTED;
+        modeFrame = MODEEDIT;
+        pinta();
+        pintaSelection();
+    }
 }
 
 function saveAdjustedFrameBtn(){
@@ -1325,6 +1332,7 @@ function putCanvasInModeFrame() {
         selectionBR.x = undefined;
         selectionBR.y = undefined;
         pinta();
+        pintaSelection();
         $("#importMode").hide();
         $("#editSpriteMode").hide();
         $("#editFrameMode").show();
