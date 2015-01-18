@@ -18,6 +18,8 @@ var Spritesheet = function(){
     this.wMax = 0;
     this.hMax = 0;
     this.oldAnimation = -1;
+    this.frameSelected = -1;
+    this.spriteSelected = -1;
 };
 
 /**
@@ -91,6 +93,9 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     }
 };
 
+Spritesheet.prototype.getNumberSprites = function(){
+    return this.spriteList.length;
+};
 
 /**
  * create a canvas with all the frames of all the sprites in horizontal
@@ -481,11 +486,17 @@ Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas,
             ctx.drawImage(image,0,0);
             ctx.restore();
             ctx.save();
-            if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
+            if (this.spriteSelected == spriteName && this.frameSelected == i){
+                ctx.fillStyle = 'rgba(255,0,0,0.1)';
+                ctx.strokeStyle = '#000000';
+                ctx.strokeRect(x, y, thisSprite.getMaxWidth(), thisSprite.getMaxHeight());
+                ctx.strokeRect(x, y, thisSprite.getMaxWidth(), thisSprite.getMaxHeight());
+            }else if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
                 ctx.strokeStyle = "#f00";
                 ctx.strokeRect(x, y, thisSprite.getMaxWidth(), thisSprite.getMaxHeight());
                 spriteSelected = i;
             }
+
             ctx.restore();
             x = x + thisSprite.getMaxWidth();
             if ((x + thisSprite.getMaxWidth()) > canvas.width){
@@ -497,9 +508,9 @@ Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas,
     return spriteSelected;
 };
 
-Spritesheet.prototype.getSelection = function(spriteName, mousePos){
+Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos){
     var thisSprite = this.getSpriteByName(spriteName);
-    var spriteSelected = -1;
+    this.spriteSelected = -1;
     if (thisSprite != null){
         var x = 0;
         var y = 0;
@@ -510,7 +521,8 @@ Spritesheet.prototype.getSelection = function(spriteName, mousePos){
             var xEnd = x + thisSprite.getMaxWidth()
             if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
                 found = true;
-                spriteSelected = i;
+                this.spriteSelected = spriteName;
+                this.frameSelected = i;
             }
             x = x + thisSprite.getMaxWidth();
             if ((x + thisSprite.getMaxWidth()) > canvas.width){
@@ -519,7 +531,38 @@ Spritesheet.prototype.getSelection = function(spriteName, mousePos){
             }
         }
     }
-    return spriteSelected;
+    return this.spriteSelected;
+};
+
+Spritesheet.prototype.getSelectionedFrame = function(spriteName){
+    var thisSprite = this.getSpriteByName(spriteName);
+    if (spriteName == this.spriteSelected){
+        return this.frameSelected;
+    }else {
+        /* var spriteSelected = -1;
+         if (thisSprite != null){
+         var x = 0;
+         var y = 0;
+         var found = false;
+         for (var i=0;thisSprite.existsFrame(i) && !found;i++){
+         var image = thisSprite.getFrame(i).getImageFrame();
+         var yEnd = y + thisSprite.getMaxHeight();
+         var xEnd = x + thisSprite.getMaxWidth()
+         if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
+         found = true;
+         spriteSelected = i;
+         }
+         x = x + thisSprite.getMaxWidth();
+         if ((x + thisSprite.getMaxWidth()) > canvas.width){
+         x = 0;
+         y = y + thisSprite.getMaxHeight();
+         }
+         }
+         }
+         }
+         return spriteSelected;*/
+        return -1;
+    }
 };
 
 Spritesheet.prototype.getSelectionImage = function(spriteName, nFrame) {

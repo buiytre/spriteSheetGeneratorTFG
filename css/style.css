@@ -1,11 +1,3 @@
-#menuIzq {
-    width: 10%;
-    float: left;
-}
-#zonaCentral {
-    width: 80%;
-    float: left;
-}
 #menuDerecho {
     width: 10%;
     float:right;
@@ -14,13 +6,16 @@
 }
 
 #preview {
-    width: 99%;
-    height: 90%;
-}
-
-#previewSpriteCanvas{
+    width: 100%;
+    height: 80%;
+    padding: 3px 10px;
+    border:PowderBlue 5px solid;
+    border-radius: 20px;
 }
 
 #spriteList {
     width: 100%;
+}
+
+#prevGif {
 }
