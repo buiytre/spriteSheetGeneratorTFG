@@ -531,7 +531,7 @@ Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos){
             }
         }
     }
-    return this.spriteSelected;
+    return this.frameSelected;
 };
 
 Spritesheet.prototype.getSelectionedFrame = function(spriteName){
@@ -654,6 +654,15 @@ Spritesheet.prototype.delFrame = function(spriteName, nFrame){
     }
 };
 
+
+Spritesheet.prototype.getNumberTotalFrames = function() {
+    var n = 0;
+    for (var i=0; i < this.spriteList.length;i++){
+        n = n + this.spriteList[i].getNumberFrames();
+    }
+    return n;
+};
+
 Spritesheet.prototype.getNumberFrames = function(spriteName){
     var thisSprite = this.getSpriteByName(spriteName);
     var n = 0;
@@ -737,3 +746,15 @@ Spritesheet.prototype.autoTuneTimeMs = function(spriteName, func){
     var thisSprite = this.getSpriteByName(spriteName);
     thisSprite.autoTuneTimeMs(func);
 };
+
+Spritesheet.prototype.setSelectedFrame = function(num){
+    if (this.spriteSelected >= 0 && this.spriteSelected < this.spriteList.length) {
+        if (num <= this.spriteList[this.spriteSelected].getNumberFrames() && num >= 0) {
+            this.frameSelected = num;
+        } else {
+            this.frameSelected = -1;
+        }
+    }else{
+        this.frameSelected = -1;
+    }
+}

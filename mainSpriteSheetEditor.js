@@ -65,6 +65,10 @@ var bTransparencyPreview = false;
 
 var bAddFrameOnReturn = false;
 
+var modeDifference = 0;
+const SLOWDIF = 1;
+const FASTDIF = 2;
+
 
 var listOfFrames = new Array();
 
@@ -313,7 +317,7 @@ function selectFrame(){
  */
 function doMouseMove(event) {
     mousePos = getMousePos(canvas, event);
-    $("#coords").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
+//    $("#coords").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
     switch (modeCanvas) {
         case IMPORTEDIMAGE:
             if (isDownRight) {
@@ -529,8 +533,6 @@ function getSelectedFrame(ori, dest, canv){
  * evento de carga de la pagina
  */
 window.onload= function(){
-    $("#importMode").show();
-    $("#editSpriteMode").hide();
     canvas = document.getElementById('preview');
     ctx = canvas.getContext('2d');
 
@@ -574,6 +576,7 @@ window.onload= function(){
         imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
     });
     sheet = new Spritesheet();
+    putCanvasInModeImport();
 };
 
 
@@ -952,8 +955,8 @@ function checkNumberSpritesAndFramesToExport(){
     if (sheet.getNumberSprites() <= 0){
         swal("Alerta","Antes de exportar debes introducir un sprite");
     }else {
-        if (sheet.getNumberOfFrames() <= 0) {
-            swal("Alerta","Antes de exportar debes introducir algun frame en algun sprite");
+        if (sheet.getNumberTotalFrames() <= 0) {
+           swal("Alerta","Antes de exportar debes introducir algun frame en algun sprite");
         } else {
             return true;
         }
@@ -1076,20 +1079,44 @@ function saveAdjustedFrameBtn(){
 }
 
 function setMilisecondsBtn(){
+    var numberMiliseconds = $("#miliSecondsOne").val();
+    if ($.isNumeric(numberMiliseconds)){
+        if (spriteSelectedName == -1 || selectedFrame == -1){
+            swal("Alerta","Has de seleccionar un sprite y un frame","error");
+        }else{
+            sheet.stopOldAnimation();
+            sheet.setMsToFrame(spriteSelectedName,selectedFrame,numberMiliseconds);
+            sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
+            swal('Numero de Ms cambiado','Se ha cambiado el numero de milisegundos entre todos los frames a ' + numberMiliseconds, "success");
+            $("#changeMSFrameModal").modal('hide');
+        }
+
+    }else{
+        swal("Parametros incorrectos","El numero de milisegundos tiene que ser un numero","error");
+    }
+}
+
+function setMilisecondsToAllBtn(){
     var numberMiliseconds = $("#milisecondsText").val();
     if ($.isNumeric(numberMiliseconds)){
-        sheet.stopOldAnimation();
-        sheet.setMsToFrame(spriteSelectedName,selectedFrame,numberMiliseconds);
-        sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
-        alert('Numero de milisegundos del frame fijado a ' + numberMiliseconds);
+        if (spriteSelectedName == -1){
+            swal("Alerta","Has de seleccionar un sprite","error");
+        }else{
+            sheet.stopOldAnimation();
+            sheet.setMsFixedToAll(spriteSelectedName,numberMiliseconds);
+            sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
+            swal('Numero de Ms cambiado','Se ha cambiado el numero de milisegundos entre todos los frames a ' + numberMiliseconds, "success");
+            $("#changeMSAllModal").modal('hide');
+        }
+
     }else{
-        alert("El numero de milisegundos no es un numero");
+        swal("Parametros incorrectos","El numero de milisegundos tiene que ser un numero","error");
     }
 }
 
 function deleteSpriteBtn(){
     if (spriteSelectedName == -1) {
-        swal("Alerta","Has de seleccionar un sprite antes de poder eliminarlo");
+        swal("Alerta","Has de seleccionar un sprite antes de poder eliminarlo","error");
     }else {
         swal({
             title: "¿Estas seguro?",
@@ -1116,7 +1143,7 @@ function deleteSpriteBtn(){
 
 function deleteFrameBtn(){
     if (spriteSelectedName == -1 || selectedFrame == -1){
-        swal("Has de seleccionar un frame de un sprite antes");
+        swal("Seleccionar Frame","Has de seleccionar un frame de un sprite antes de utilizar esta opción","error");
     }else{
         swal({
                 title: "¿Estas seguro?",
@@ -1139,6 +1166,7 @@ function deleteFrameBtn(){
                 }
                 var text = "El frame " + selectedFrame + " del sprite " + spriteSelectedName + " se ha eliminado correcamente";
                 selectedFrame = -1;
+                sheet.setSelectedFrame(-1);
                 pinta();
                 swal("Eliminado",text,"success");
             });
@@ -1211,25 +1239,25 @@ function markPixel(x,y, value, imageData){
 }
 
 function interpolateNextFrameBtn(){
-    var selectedSprite = spriteSelectedName;
-    if (selectedSprite == null || selectedFrame == -1){
-        alert("Has de seleccionar un frame de un sprite antes");
+    if (spriteSelectedName == -1 || selectedFrame == -1){
+        swal("Seleccionar Frame","Has de seleccionar un frame de un sprite antes de utilizar esta opción","error");
     }else{
         sheet.stopOldAnimation();
-        sheet.interpolateNextFrame(selectedSprite,selectedFrame);
+        sheet.interpolateNextFrame(spriteSelectedName,selectedFrame);
         modeCanvas = FRAMETOSELECT;
-        sheet.paintAnimation(selectedSprite,$("#previewSpriteCanvas").get(0));
+        sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
         pinta();
+        swal("Nuevo Frame creado","Se ha creado el nuevo frame correctamente","success")
     }
 }
 
-function setAutoMsFastBtn(){
+function calculateAutoMsFast(){
     var selectedSprite = spriteSelectedName;
     var spr = new Sprite(" ");
     sheet.autoTuneTimeMs(selectedSprite,spr.autoTuneCalcFastDiffFunc);
 }
 
-function setAutoMsSlowBtn(){
+function calculateAutoMsSlow(){
     var selectedSprite = spriteSelectedName;
     var spr = new Sprite(" ");
     sheet.autoTuneTimeMs(selectedSprite,spr.autoTuneCalcSlowDiffFunc);
@@ -1247,6 +1275,9 @@ function putCanvasInModeImport(){
     pinta();
     $("#importMode").show();
     $("#editSpriteMode").hide();
+    $("#listadoSprites").show();
+    $("#editFrameMode").hide();
+    $("#info").html("MODO GENERAL");
 }
 
 function putCanvasInModeSprite(){
@@ -1263,7 +1294,70 @@ function putCanvasInModeSprite(){
         pinta();
         $("#importMode").hide();
         $("#editSpriteMode").show();
+        $("#listadoSprites").hide();
+        $("#editFrameMode").hide();
+        $("#info").html("MODO EDICION DE SPRITE. Editando "+ spriteSelectedName);
     }else{
         swal("Seleccionar sprite","No puedes ir al modo editar sin haber seleccionado un sprite");
     }
+}
+
+function putCanvasInModeFrame() {
+    if (spriteSelectedName == -1 || selectedFrame == -1) {
+        swal("Seleccionar frame","No puedes ir al modo editar frame sin haber seleccionado un frame");
+    }else{
+        posFrame.x = 0;
+        posFrame.y = 0;
+        modeFrame = MODEEDIT;
+        currentScale = 1;
+        posSprAdj.x = 0;
+        posSprAdj.y = 0;
+        imageSprAdj = sheet.getSelectionImage(spriteSelectedName,selectedFrame);
+        $("#milisecondsText").val(sheet.getMs(spriteSelectedName,selectedFrame));
+        var p = sheet.getPositionFrame(spriteSelectedName,selectedFrame);
+        posFrame.x = p.x;
+        posFrame.y = p.y;
+        modeCanvas = FRAMESELECTED;
+        selectionTL.x = undefined;
+        selectionTL.y = undefined;
+        selectionBR.x = undefined;
+        selectionBR.y = undefined;
+        pinta();
+        $("#importMode").hide();
+        $("#editSpriteMode").hide();
+        $("#editFrameMode").show();
+        $("#listadoSprites").hide();
+        $("#info").html("MODO EDICION DE FAME. Editando frame "+ selectedFrame + ' de ' + spriteSelectedName);
+
+    }
+}
+
+function detectTimeMs(){
+    if (spriteSelectedName == -1){
+        swal("Has de seleccionar un sprite para utilizar esta funcionalidad");
+    }else {
+        switch (modeDifference) {
+            case SLOWDIF:
+                calculateAutoMsSlow();
+                swal("Calculado intervalo entre imagenes");
+                $("#autoDetectMsModal").modal('hide');
+                break;
+            case FASTDIF:
+                calculateAutoMsFast();
+                swal("Calculado intervalo entre imagenes");
+                $("#autoDetectMsModal").modal('hide');
+                break;
+            default:
+                swal("Has de seleccionar uno de los modos disponibles");
+                break;
+        }
+    }
+}
+
+function setModoTimeMsFastDiff(){
+    modeDifference = FASTDIF;
+}
+
+function setModoTimeMsSlowDiff(){
+    modeDifference = SLOWDIF;
 }

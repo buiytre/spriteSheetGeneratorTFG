@@ -62,7 +62,10 @@
                             <li><a href="#" onclick="modeEditSprite()" >Editar</a></li>
                             <li><a href="#" onclick="deleteSpriteBtn()">Eliminar</a></li>
                             <li class="divider"></li>
+                            <li><a href="#" data-toggle="modal" data-target="#changeMSAllModal">Cambiar intervalo entre frames</a></li>
+                            <li class="divider"></li>
                             <li><a href="#" data-toggle="modal" data-target="#autoDetectFramesModal">AutoDetectar animaciones</a></li>
+                            <li><a href="#" data-toggle="modal" data-target="#autoDetectMsModal">AutoDetectar tiempo entre Frames</a></li>
                         </ul>
                     </li>
 
@@ -70,6 +73,8 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Frame <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="#" onclick="addFrameBtn()">Añadir Frame</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo al frame siguiente</a></li>
                         <li class="divider"></li>
                         <li><a href="#" onclick="editFrameBtn()">Encuadrar Imagen</a></li>
                         <li><a href="#" onclick="adjustFrameBtn()">Ajustar Frame a la animación</a></li>
@@ -100,25 +105,37 @@
                 </div>
                 <div id="editSpriteMode">
                     <p>
-                        <label for="milisecondsText">Miliseconds animation:</label>
-                        <input id="milisecondsText" type="text" />
-                        <button type="button"  class="btn btn-primary" onclick="setMilisecondsBtn()" >Set miliseconds interval</button>
+                        <button type="button" class="btn btn-primary" onclick="putCanvasInModeFrame()" >
+                            Editar Frame Seleccionado
+                        </button>
                     </p>
-                    <p>
-                        <button type="button"  class="btn btn-primary" onclick="setAutoMsFastBtn()" >AutoCalculateMs (Fast difference Function)</button>
-                    </p>
-                    <p>
-                        <button type="button"  class="btn btn-primary" onclick="setAutoMsSlowBtn()" >AutoCalculateMs (Slow Difference Function)</button>
-                    </p>
+
                     <p>
                         <button type="button" class="btn btn-primary" onclick="deleteFrameBtn()" >
-                            Eliminar frame
+                            Eliminar Frame seleccionado
                         </button>
                     </p>
                     <p>
-                        <button type="button" class="btn btn-primary" onclick="editFrameBtn()" >
-                            Edit Frame
+                        <button type="button" class="btn btn-primary" onclick="interpolateNextFrameBtn()" >
+                            Interpolar Frame Siguiente
                         </button>
+                    </p>
+                    <p>
+                        <button type="button"  class="btn btn-primary" data-toggle="modal" data-target="#autoDetectMsModal" >Auto Calcular Ms entre Frames</button>
+                    </p>
+                    <p>
+                        <button type="button"  class="btn btn-primary"  data-toggle="modal" data-target="#changeMSAllModal"">Cambiar intervalo entre frames</button>
+                    </p>
+
+
+                </div>
+                <div id="editFrameMode">
+                    <p>
+                        <button type="button"  class="btn btn-primary"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo</button>
+                    </p>
+
+                    <p>
+                        <input id="transparency" type="checkbox" onclick="transparencyBtn()" />Transparencias
                     </p>
                     <p>
                         <button type="button" class="btn btn-primary" onclick="adjustFrameBtn()" >
@@ -130,16 +147,6 @@
                             Save Adjust
                         </button>
                     </p>
-                    <p>
-                        <input id="transparency" type="checkbox" onclick="transparencyBtn()" />Transparencias
-                    </p>
-
-                    <p>
-                        <button type="button" class="btn btn-primary" onclick="interpolateNextFrameBtn()" >
-                            Interpolate next frame
-                        </button>
-                    </p>
-
                 </div>
                 <div id="listadoSprites">
                     <p><select id="spriteList" name="spriteList" size="10" onchange="changePreview();"></select></p>
@@ -162,7 +169,7 @@
 
 
             <div class="col-md-10">
-                <div id="coords"></div>
+                <div id="info"></div>
                 <canvas id="preview"></canvas>
             </div>
         </div>
@@ -180,7 +187,9 @@
             <button type="button" class="btn btn-primary" onclick="putCanvasInModeSprite()">
                 Modo Sprite
             </button>
-
+            <button type="button" class="btn btn-primary" onclick="putCanvasInModeFrame()">
+                Modo Frame
+            </button>
         </div>
         <div class="container">
             <div id="zoom">
@@ -248,7 +257,7 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <label for="imagen" class="control-label">Nombre nuevo Sprite:</label>
+                            <label for="spriteName" class="control-label">Nombre nuevo Sprite:</label>
                             <input type="text" value="" id="spriteName" />
                         </div>
                     </form>
@@ -278,7 +287,7 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <label for="imagen" class="control-label">Nombre nuevo Sprite:</label>
+                            <label for="spriteName" class="control-label">Nombre nuevo Sprite:</label>
                             <input type="text" value="" id="spriteName" />
                         </div>
                     </form>
@@ -304,9 +313,9 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <label for="imagen" class="control-label">Parametro de diferenciacion (0-100):</label>
+                            <label for="percentDifferenceText" class="control-label">Parametro de diferenciacion (0-100):</label>
                             <input type="text" id="percentDifferenceText" value="5"/>
-                            <div class="alert alert-info" role="alert">Nota: Cuanto mayor sea este valor mas diferencias habran entre los sprites</div>
+                            <div class="alert alert-info" role="alert">Nota: Cuanto mayor sea este valor mas diferencias habran entre los frames de un sprite</div>
                         </div>
                     </form>
                 </div>
@@ -317,6 +326,86 @@
             </div>
         </div>
     </div>
+
+
+    <div class="modal fade" id="autoDetectMsModal" tabindex="-1" role="dialog" aria-labelledby="autoDetectMsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="autoDetectMsModal">AutoDetectar velocidad entre frame y frame</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="imagen" class="control-label">Modo:</label>
+                            <div class="btn-group" role="group" >
+                                <button type="button" class="btn btn-default" onclick="setModoTimeMsSlowDiff()">Mas rapido si son iguales</button>
+                                <button type="button" class="btn btn-default" onclick="setModoTimeMsFastDiff()">Mas rapido si son diferentes</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="detectTimeMs()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="changeMSAllModal" tabindex="-1" role="dialog" aria-labelledby="changeMSAllModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="changeMSAllModalLabel">Cambiar Ms entre frame y frame</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="imagen" class="control-label">Numero de milisegundos:</label>
+                            <div class="btn-group" role="group" >
+                                <input id="milisecondsText" type="text" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="setMilisecondsToAllBtn()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="changeMSFrameModal" tabindex="-1" role="dialog" aria-labelledby="changeMSFrameModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="changeMSFrameModalLabel">Cambiar Ms hasta el siguiente frame</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="miliSecondsOne" class="control-label">Numero de milisegundos:</label>
+                            <div class="btn-group" role="group" >
+                                <input id="miliSecondsOne" type="text" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="setMilisecondsBtn()">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 </body>
 </html>

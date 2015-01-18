@@ -74,6 +74,7 @@ Sprite.prototype.delFrame = function(n){
     this.pos.splice(n,1);
     this.timeMs.splice(n,1);
     this.recalculateMaxWidthHeight();
+    this.selectedFrame = -1;
     this.nAnimation = 0;
 };
 
@@ -336,8 +337,7 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
         var imageNext = this.frameList[i+1].getImageFrame();
         ctxt.clearRect(0,0,canv.width,canv.height);
         ctxt.drawImage(imageNext,this.pos[i+1].x,this.pos[i+1].y);
-        var dif = frame.compareWithCanvas(canv, this.pos[i].x,this.pos[i].y);
-        dif = dif*100;
+        var dif = frame.compareWithCanvas(canv, this.pos[i].x,this.pos[i].y)*100;
         //si son iguales contamos el numero de frames iguales y los quitamos de la animación, haremos que el frame actual dure mas
         var count = 0;
         var end = false;
@@ -359,12 +359,12 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[i + 1].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[i + 1].x, this.pos[i + 1].y);
-                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y)*100;
                 } else {
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[0].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[0].x, this.pos[0].y);
-                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y)*100;
                     end = true;
                 }
             }else{
