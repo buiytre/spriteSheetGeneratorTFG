@@ -467,6 +467,22 @@ Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
     }
 };
 
+Spritesheet.prototype.maxHeightRect = function(spriteName) {
+    var thisSprite = this.getSpriteByName(spriteName);
+    var y =0;
+    var x=0;
+    if (thisSprite != null){
+        for (var i=0;thisSprite.existsFrame(i);i++){
+            x = x + thisSprite.getMaxWidth();
+            if ((x + thisSprite.getMaxWidth()) > canvas.width){
+                x = 0;
+                y = y + thisSprite.getMaxHeight();
+            }
+        }
+    }
+    return (y + thisSprite.getMaxHeight());
+};
+
 Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas, yDespl) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
