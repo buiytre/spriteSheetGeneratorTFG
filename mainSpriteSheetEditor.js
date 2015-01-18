@@ -372,7 +372,10 @@ function doMouseMove(event) {
         case FRAMETOSELECT:
             if (isDownRight) {
                 var incrY = (mousePos.y - startClickRight.y);
-                posImage.y = posImage.y + incrY;
+                var maxY = sheet.maxYRect(spriteSelectedName);
+                if (posImage.y + incrY < maxY){
+                    posImage.y = posImage.y + incrY;
+                }
                 if (posImage.y < 0) posImage.y = 0;
                 startClickRight = getMousePos(canvas, event);
             }
@@ -752,75 +755,69 @@ function detectFrames(){
         $("#autoDetectFramesModal").hide();
     }else {
         var percentDifference = $("#percentDifferenceText").val();
-        if (!percentDifference){
-            percentDifference = 5;  //by default 5
+        if (!percentDifference || isNaN(percentDifference) || percentDifference < 0 || percentDifference >100){
+            swal("Valor Incorrecto", "El valor debe ser un número entre 0 y 100", "error");
         }else{
-            if (isNaN(percentDifference) || percentDifference < 0 && percentDifference >100){
-                swal("Valor Incorrecto", "El valor debe ser un número entre 0 y 100", "error");
+            if (!transparentColor) {
+                    swal("No hay transparencia", "No se ha detectado ningun pixel transparente en esta imagen, es necesario para poder utilizar esta funcionalidad." +
+                    " Puede seleccionar los frames manualmente o importar una imagen con transparencias", "error");
             }else{
-                if (!transparentColor) {
-                        swal("No hay transparencia", "No se ha detectado ningun pixel transparente en esta imagen, es necesario para poder utilizar esta funcionalidad." +
-                        " Puede seleccionar los frames manualmente o importar una imagen con transparencias", "error");
-                }else{
-                    //todo Barra de progreso
-                    $("body").css("cursor", "wait");
-                    listOfFrames = new Array();
-                    var areaToCheck = new Array();
-                    $("#numFramesDetected").html("Numero de sprites detectados: 0");
-                    var canvasAutoDetect = document.createElement("canvas");
-                    var ctxAutoDetect = canvasAutoDetect.getContext('2d');
-                    canvasAutoDetect.width = img.width;
-                    canvasAutoDetect.height = img.height;
-                    ctxAutoDetect.drawImage(img, 0, 0);
-                    var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
-                    areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
-                    for (var i = 0; i < areaToCheck.length; i++) {
-                        for (var y = areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y; y++) {
-                            for (var x = areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++) {
-                                if (!isTransparent(x, y, imageDataToDetect)) {
-                                    var pointFound = new Point(x, y);
-                                    getSelectionAroundPoint(pointFound, imageDataToDetect);
-                                    pintaSelection();
-                                    //añadimos el frame a la lista de frames
-                                    var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
-                                    var pointTL = new Point(selectionTL.x, selectionTL.y);
-                                    var pointBR = new Point(selectionBR.x, selectionBR.y);
-                                    listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
+                //todo Barra de progreso
+                $("body").css("cursor", "wait");
+                listOfFrames = new Array();
+                var areaToCheck = new Array();
+                $("#numFramesDetected").html("Numero de sprites detectados: 0");
+                var canvasAutoDetect = document.createElement("canvas");
+                var ctxAutoDetect = canvasAutoDetect.getContext('2d');
+                canvasAutoDetect.width = img.width;
+                canvasAutoDetect.height = img.height;
+                ctxAutoDetect.drawImage(img, 0, 0);
+                var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
+                areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
+                for (var i = 0; i < areaToCheck.length; i++) {
+                    for (var y = areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y; y++) {
+                        for (var x = areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++) {
+                            if (!isTransparent(x, y, imageDataToDetect)) {
+                                var pointFound = new Point(x, y);
+                                getSelectionAroundPoint(pointFound, imageDataToDetect);
+                                pintaSelection();
+                                //añadimos el frame a la lista de frames
+                                var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
+                                var pointTL = new Point(selectionTL.x, selectionTL.y);
+                                var pointBR = new Point(selectionBR.x, selectionBR.y);
+                                listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
 
-                                    //creamos nuevas areas alrededor de ese frame
-                                    newAreasToCheck(areaToCheck, i, selectionTL, selectionBR, pointFound);
-                                    //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
-                                    for (var j = i + 1; j < areaToCheck.length; j++) {
-                                        newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
-                                    }
+                                //creamos nuevas areas alrededor de ese frame
+                                newAreasToCheck(areaToCheck, i, selectionTL, selectionBR, pointFound);
+                                //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
+                                for (var j = i + 1; j < areaToCheck.length; j++) {
+                                    newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
                                 }
                             }
                         }
                     }
-                    selectionTL.x = 0;
-                    selectionTL.y = 0;
-                    selectionBR.x = 0;
-                    selectionBR.y = 0;
-                    modeSelection = SELECTIONAUTO;
-                    pinta();
-                    pintaSelection();
-                    $("body").css("cursor", "default");
-                    /*swal({
-                     title: "¡Se han detectado " + listOfFrames.length + " frames!",
-                     text: "Se procedera a detectar las animaciones.", timer: 2000
-                     });*/
-                    $("body").css("cursor", "wait");
-                    autoDetectAnimations(percentDifference);
-                    $("body").css("cursor", "default");
-                    modeSelection = SELECTIONDEFAULT;
-                    pinta();
-                    $("#autoDetectFramesModal").hide();
-                    swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
                 }
+                selectionTL.x = 0;
+                selectionTL.y = 0;
+                selectionBR.x = 0;
+                selectionBR.y = 0;
+                modeSelection = SELECTIONAUTO;
+                pinta();
+                pintaSelection();
+                $("body").css("cursor", "default");
+                /*swal({
+                 title: "¡Se han detectado " + listOfFrames.length + " frames!",
+                 text: "Se procedera a detectar las animaciones.", timer: 2000
+                 });*/
+                $("body").css("cursor", "wait");
+                autoDetectAnimations(percentDifference);
+                $("body").css("cursor", "default");
+                modeSelection = SELECTIONDEFAULT;
+                pinta();
+                $("#autoDetectFramesModal").hide();
+                swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
             }
         }
-
-
     }
 }
 

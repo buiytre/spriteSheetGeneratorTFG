@@ -8,6 +8,7 @@
 #preview {
     width: 100%;
     height: 80%;
+    padding: 3px 10px;
     border:PowderBlue 5px solid;
     border-radius: 20px;
 }

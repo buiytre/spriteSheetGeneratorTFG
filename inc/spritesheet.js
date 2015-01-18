@@ -467,10 +467,10 @@ Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
     }
 };
 
-Spritesheet.prototype.maxHeightRect = function(spriteName) {
+Spritesheet.prototype.maxYRect = function(spriteName) {
     var thisSprite = this.getSpriteByName(spriteName);
-    var y =0;
-    var x=0;
+    var y = 0;
+    var x = 0;
     if (thisSprite != null){
         for (var i=0;thisSprite.existsFrame(i);i++){
             x = x + thisSprite.getMaxWidth();
@@ -480,7 +480,7 @@ Spritesheet.prototype.maxHeightRect = function(spriteName) {
             }
         }
     }
-    return (y + thisSprite.getMaxHeight());
+    return y;
 };
 
 Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas, yDespl) {
