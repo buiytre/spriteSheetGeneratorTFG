@@ -1088,6 +1088,7 @@ function setMilisecondsBtn(){
             sheet.setMsToFrame(spriteSelectedName,selectedFrame,numberMiliseconds);
             sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
             swal('Numero de Ms cambiado','Se ha cambiado el numero de milisegundos entre todos los frames a ' + numberMiliseconds, "success");
+            $("#milisecondsText").html("Numero de MS: "+numberMiliseconds);
             $("#changeMSFrameModal").modal('hide');
         }
 
@@ -1097,7 +1098,7 @@ function setMilisecondsBtn(){
 }
 
 function setMilisecondsToAllBtn(){
-    var numberMiliseconds = $("#milisecondsText").val();
+    var numberMiliseconds = $("#milisecondsTextInput").val();
     if ($.isNumeric(numberMiliseconds)){
         if (spriteSelectedName == -1){
             swal("Alerta","Has de seleccionar un sprite","error");
@@ -1313,7 +1314,8 @@ function putCanvasInModeFrame() {
         posSprAdj.x = 0;
         posSprAdj.y = 0;
         imageSprAdj = sheet.getSelectionImage(spriteSelectedName,selectedFrame);
-        $("#milisecondsText").val(sheet.getMs(spriteSelectedName,selectedFrame));
+        $("#milisecondsText").html("Numero de MS: " + sheet.getMs(spriteSelectedName,selectedFrame));
+        //$("#milisecondsText").val(sheet.getMs(spriteSelectedName,selectedFrame));
         var p = sheet.getPositionFrame(spriteSelectedName,selectedFrame);
         posFrame.x = p.x;
         posFrame.y = p.y;

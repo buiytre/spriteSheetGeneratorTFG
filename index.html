@@ -131,11 +131,12 @@
                 </div>
                 <div id="editFrameMode">
                     <p>
+                        <div id="milisecondsText"></div>
                         <button type="button"  class="btn btn-primary"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo</button>
                     </p>
 
                     <p>
-                        <input id="transparency" type="checkbox" onclick="transparencyBtn()" />Transparencias
+                        <label for="transparency"></label><input id="transparency" type="checkbox" onclick="transparencyBtn()" />Transparencias
                     </p>
                     <p>
                         <button type="button" class="btn btn-primary" onclick="adjustFrameBtn()" >
@@ -149,11 +150,15 @@
                     </p>
                 </div>
                 <div id="listadoSprites">
-                    <p><select id="spriteList" name="spriteList" size="10" onchange="changePreview();"></select></p>
-                    <button type="button" class="btn btn-primary" onclick="modeEditSprite()" >
-                        Editar sprite
-                    </button>
-
+                    <p>
+                        <label for="spriteList"></label><select id="spriteList" name="spriteList" size="10" onchange="changePreview();"></select>
+                    </p>
+                    <p>
+                        <button type="button" class="btn btn-primary" onclick="modeEditSprite()" >
+                            Editar sprite
+                        </button>
+                    </p>
+                    <p>
                     <button type="button" class="btn btn-primary" onclick="deleteSpriteBtn()" >
                         Eliminar sprite
                     </button>
@@ -194,10 +199,10 @@
         <div class="container">
             <div id="zoom">
                     <button type="button" class="btn btn-primary" onclick="zoomInBtn()">
-                        <span class="glyphicon glyphicon-zoom-in" aria-hidden="true" />
+                        <span class="glyphicon glyphicon-zoom-in" aria-hidden="true" ></span>
                     </button>
                     <button type="button" class="btn btn-primary" onclick="zoomOutBtn()">
-                        <span class="glyphicon glyphicon-zoom-out" aria-hidden="true" />
+                        <span class="glyphicon glyphicon-zoom-out" aria-hidden="true" ></span>
                     </button>
             </div>
         </div>
@@ -226,7 +231,7 @@
                     <form>
                         <div class="form-group">
                             <label for="imagen" class="control-label">Seleccionar archivo:</label>
-                            <input type="file" clas="form-control" id="imagen" name="imagen" />
+                            <input type="file" class="form-control" id="imagen" name="imagen" />
                         </div>
                     </form>
                 </div>
@@ -335,9 +340,9 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <label for="imagen" class="control-label">Numero de milisegundos:</label>
+                            <label for="milisecondsText" class="control-label">Numero de milisegundos:</label>
                             <div class="btn-group" role="group" >
-                                <input id="milisecondsText" type="text" />
+                                <input id="milisecondsTextInput" type="text" />
                             </div>
                         </div>
                     </form>
@@ -375,7 +380,10 @@
             </div>
         </div>
     </div>
-
-
+<script>
+    $('#changeMSFrameModal').on('shown.bs.modal', function() {
+        $("#miliSecondsOne").val(sheet.getMs(spriteSelectedName,selectedFrame));
+    });
+</script>
 </body>
 </html>
