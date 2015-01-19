@@ -548,8 +548,8 @@ window.onload= function(){
     var pw = canvas.parentNode.clientWidth;
     var ph = canvas.parentNode.clientHeight;
 
-    canvas.height = pw * 0.9 * (canvas.height/canvas.width);
-    canvas.width = pw * 0.9;
+    canvas.height = pw * 0.95 * (canvas.height/canvas.width);
+    canvas.width = pw * 0.95;
     canvas.style.top = (ph-canvas.height)/2 + "px";
     canvas.style.left = (pw-canvas.width)/2 + "px";
 
@@ -559,8 +559,8 @@ window.onload= function(){
     pw = canvas.parentNode.clientWidth;
     ph = canvas.parentNode.clientHeight;
 
-    canvasSprite.height = pw * 0.15 * (canvas.height/canvas.width);
-    canvasSprite.width = pw * 0.15;
+    canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
+    canvasSprite.width = pw * 0.17;
     canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
     canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
 
@@ -604,7 +604,7 @@ window.onload= function(){
         var ph = canvas.parentNode.clientHeight;
 
         canvas.height = pw * 0.9* (canvas.height/canvas.width);
-        canvas.width = pw * 0.9;
+        canvas.width = pw * 0.99;
         canvas.style.top = (ph-canvas.height)/2 + "px";
         canvas.style.left = (pw-canvas.width)/2 + "px";
         var canvasSprite = document.getElementById('previewSpriteCanvas');
@@ -613,8 +613,8 @@ window.onload= function(){
         pw = canvas.parentNode.clientWidth;
         ph = canvas.parentNode.clientHeight;
 
-        canvasSprite.height = pw * 0.15 * (canvas.height/canvas.width);
-        canvasSprite.width = pw * 0.15;
+        canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
+        canvasSprite.width = pw * 0.17;
         canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
         canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
         pinta();
@@ -1219,10 +1219,9 @@ function deleteFrameBtn(){
                 sheet.stopOldAnimation();
                 sheet.delFrame(spriteSelectedName,selectedFrame);
                 if (sheet.getNumberFrames(spriteSelectedName) > 0){
-                    modeCanvas = FRAMETOSELECT;
-                    sheet.paintAnimation(spriteSelectedName,$("#previewSpriteCanvas").get(0));
+                    putCanvasInModeSprite();
                 }else{
-                    modeCanvas = IMPORTEDIMAGE;
+                    putCanvasInModeImport();
                 }
                 var text = "El frame " + selectedFrame + " del sprite " + spriteSelectedName + " se ha eliminado correcamente";
                 selectedFrame = -1;
@@ -1337,6 +1336,7 @@ function putCanvasInModeImport(){
     $("#editSpriteMode").hide();
     $("#listadoSprites").show();
     $("#editFrameMode").hide();
+    $("#zoom").show();
     $("#info").html("MODO GENERAL");
 }
 
@@ -1356,6 +1356,7 @@ function putCanvasInModeSprite(){
         $("#editSpriteMode").show();
         $("#listadoSprites").hide();
         $("#editFrameMode").hide();
+        $("#zoom").hide();
         $("#info").html("MODO EDICION DE SPRITE. Editando "+ spriteSelectedName);
     }else{
         swal("Seleccionar sprite","No puedes ir al modo editar sin haber seleccionado un sprite");
@@ -1389,6 +1390,7 @@ function putCanvasInModeFrame() {
         $("#editSpriteMode").hide();
         $("#editFrameMode").show();
         $("#listadoSprites").hide();
+        $("#zoom").hide();
         $("#info").html("MODO EDICION DE FAME. Editando frame "+ selectedFrame + ' de ' + spriteSelectedName);
 
     }
