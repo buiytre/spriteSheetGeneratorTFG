@@ -466,7 +466,7 @@ function pintaTransparency(){
         if (i != selectedFrame){
             var frame = spr.getFrame(i);
             var p = spr.getPositionFrame(i);
-            ctx.drawImage(frame.getImageFrame(), p.x, p.y);
+            if (frame.getImageFrame().width && frame.getImageFrame().height) ctx.drawImage(frame.getImageFrame(), p.x, p.y);
         }
         i = i + 1;
     }
@@ -485,7 +485,7 @@ function pinta(){
             ctx.translate(posImage.x, posImage.y);
             ctx.scale(currentScale,currentScale);
             ctx.translate(-img.width/2,-img.height/2);
-            ctx.drawImage(img,0,0);
+            if (img.width && img.height) ctx.drawImage(img,0,0);
             break;
         case FRAMETOSELECT:
             sheet.paintSelectionRect($("#spriteList").val(), mousePos, canvas, posImage.y);
@@ -497,7 +497,7 @@ function pinta(){
             }
             ctx.translate(posFrame.x, posFrame.y);
             ctx.translate(posSprAdj.x, posSprAdj.y);
-            ctx.drawImage(imageSprAdj,0,0);
+            if (imageSprAdj.width && imageSprAdj.height) ctx.drawImage(imageSprAdj,0,0);
             break;
     }
     ctx.restore();
@@ -552,8 +552,18 @@ window.onload= function(){
     canvas.width = pw * 0.9;
     canvas.style.top = (ph-canvas.height)/2 + "px";
     canvas.style.left = (pw-canvas.width)/2 + "px";
-    //canvas.width = $('#preview').width();
-    //canvas.height = $('#preview').height();
+
+    var canvasSprite = document.getElementById('previewSpriteCanvas');
+    var ctxSprite = canvas.getContext('2d');
+
+    pw = canvas.parentNode.clientWidth;
+    ph = canvas.parentNode.clientHeight;
+
+    canvasSprite.height = pw * 0.15 * (canvas.height/canvas.width);
+    canvasSprite.width = pw * 0.15;
+    canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
+    canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
+
     transparencyMatrix = new Array();
     for(var i=0;i<canvas.width;i++){
         transparencyMatrix[i]=new Array();
@@ -597,16 +607,25 @@ window.onload= function(){
         canvas.width = pw * 0.9;
         canvas.style.top = (ph-canvas.height)/2 + "px";
         canvas.style.left = (pw-canvas.width)/2 + "px";
-//        canvas = document.getElementById('preview');
-  //      ctx = canvas.getContext('2d');
-    //    canvas.with = $('#preview').width();
-      //  canvas.height = $('#preview').height();
+        var canvasSprite = document.getElementById('previewSpriteCanvas');
+        var ctxSprite = canvas.getContext('2d');
+
+        pw = canvas.parentNode.clientWidth;
+        ph = canvas.parentNode.clientHeight;
+
+        canvasSprite.height = pw * 0.15 * (canvas.height/canvas.width);
+        canvasSprite.width = pw * 0.15;
+        canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
+        canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
         pinta();
         pintaSelection();
         imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
     });
     sheet = new Spritesheet();
     putCanvasInModeImport();
+    imgTmp = document.createElement('img');
+    imgTmp.src = "white.png";
+    loadImageTemp();
 };
 
 
@@ -614,6 +633,7 @@ window.onload= function(){
  * Funcion que se ejecuta an cuanto se carga la imagen
  */
 function loadImageTemp(){
+    img = document.createElement('img');
     img.src = imgTmp.src;
     loadImage();
     pinta();
@@ -642,7 +662,7 @@ function detectTransparentColor(){
     canv.width = img.width;
     canv.height = img.height;
     var cnt = canv.getContext('2d');
-    cnt.drawImage(img,0,0,canv.width,canv.height);
+    if (img.width && img.height) cnt.drawImage(img,0,0,canv.width,canv.height);
     var imageTransParentData = ctx.getImageData(0,0,canv.width,canv.height);
     for (var x=0; x<imageTransParentData.width && !transparentColor; x++){
         for (var y=0; y<imageTransParentData.height && !transparentColor; y++){
@@ -802,7 +822,7 @@ function detectFrames(){
                 var ctxAutoDetect = canvasAutoDetect.getContext('2d');
                 canvasAutoDetect.width = img.width;
                 canvasAutoDetect.height = img.height;
-                ctxAutoDetect.drawImage(img, 0, 0);
+                if (img.width && img.height) ctxAutoDetect.drawImage(img, 0, 0);
                 var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
                 areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
                 for (var i = 0; i < areaToCheck.length; i++) {
@@ -877,7 +897,7 @@ function autoDetectAnimations(percentDifference){
             frameInSprite[i] = spritesIntroducidos;
             var frameImage = listOfFrames[i].frame.getImageFrame();
             ctxt.clearRect(0,0,canv.width,canv.height);
-            ctxt.drawImage(frameImage,0,0);
+            if (frameImage.width && frameImage.height) ctxt.drawImage(frameImage,0,0);
             for (var j=i+1; j < listOfFrames.length; j++){
                 if (frameInSprite[j] == -1) {
                     var dif = listOfFrames[j].frame.compareWithCanvas(canv, 0, 0);
