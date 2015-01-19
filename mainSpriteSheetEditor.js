@@ -81,8 +81,18 @@ var busy = false;
  */
 function getMousePos(cv,e){
     var rect = cv.getBoundingClientRect();
-   return {x: (e.clientX - rect.left)-10, y: (e.clientY - rect.top)};
-//    return {x:e.pageX-rect.left, y:e.pageY};
+    // getBoundingClientRect ignora border y padding, asi que lo calculamos nosotros mediante jquery
+    var widthLeft = Number($(canvas).css('border-left-width').replace(/[^-\d\.]/g, ''));
+    var widthTop = Number($(canvas).css('border-top-width').replace(/[^-\d\.]/g, ''));
+    var padLeft = Number($(canvas).css('padding-left').replace(/[^-\d\.]/g, ''));
+    var padTop = Number($(canvas).css('padding-top').replace(/[^-\d\.]/g, ''));
+    var x = (e.clientX - rect.left);
+    var y = (e.clientY - rect.top);
+    x = x - padLeft;
+    y = y - padTop;
+    x = x - widthLeft;
+    y = y - widthTop;
+    return {x:  x, y: y};
 }
 
 
@@ -535,8 +545,15 @@ window.onload= function(){
     canvas = document.getElementById('preview');
     ctx = canvas.getContext('2d');
 
-    canvas.width = $('#preview').width();
-    canvas.height = $('#preview').height();
+    var pw = canvas.parentNode.clientWidth;
+    var ph = canvas.parentNode.clientHeight;
+
+    canvas.height = pw * 0.9 * (canvas.height/canvas.width);
+    canvas.width = pw * 0.9;
+    canvas.style.top = (ph-canvas.height)/2 + "px";
+    canvas.style.left = (pw-canvas.width)/2 + "px";
+    //canvas.width = $('#preview').width();
+    //canvas.height = $('#preview').height();
     transparencyMatrix = new Array();
     for(var i=0;i<canvas.width;i++){
         transparencyMatrix[i]=new Array();
@@ -544,6 +561,8 @@ window.onload= function(){
             transparencyMatrix[i][j]=true;
         }
     }
+    document.addEventListener('onselectstart',nullFunction,false);
+    document.addEventListener('contextmenu',nullFunction,false);
     canvas.addEventListener('click',nullFunction,false);
     canvas.addEventListener('contextmenu',nullFunction,false);
     canvas.addEventListener('mousedown', nullFunction, false);
@@ -568,8 +587,20 @@ window.onload= function(){
         imgTmp.src = url;
     });
     $(window).resize(function(){
-        canvas.with = $('#preview').width();
-        canvas.height = $('#preview').height();
+        canvas = document.getElementById('preview');
+        ctx = canvas.getContext('2d');
+
+        var pw = canvas.parentNode.clientWidth;
+        var ph = canvas.parentNode.clientHeight;
+
+        canvas.height = pw * 0.9* (canvas.height/canvas.width);
+        canvas.width = pw * 0.9;
+        canvas.style.top = (ph-canvas.height)/2 + "px";
+        canvas.style.left = (pw-canvas.width)/2 + "px";
+//        canvas = document.getElementById('preview');
+  //      ctx = canvas.getContext('2d');
+    //    canvas.with = $('#preview').width();
+      //  canvas.height = $('#preview').height();
         pinta();
         pintaSelection();
         imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
