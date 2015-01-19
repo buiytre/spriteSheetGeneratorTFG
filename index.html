@@ -62,7 +62,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <li><a href="#" onclick="addFrameBtn()">Añadir Frame</a></li>
                         <li class="divider"></li>
-                        <li><a href="#"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo al Frame siguiente</a></li>
+                        <li><a href="#"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo con el Frame siguiente</a></li>
                         <li class="divider"></li>
                         <li><a href="#" onclick="editFrameBtn()">Encuadrar Imagen</a></li>
                         <li><a href="#" onclick="adjustFrameBtn()">Ajustar Frame a la animación</a></li>
@@ -144,7 +144,7 @@
                     </p>
 
                     <p>
-                        <label for="transparency"></label><input id="transparency" type="checkbox" onclick="transparencyBtn()" />Transparencias
+                        <label for="transparency"></label><input id="transparency" type="checkbox" onclick="transparencyBtn()" /> Modo Onion Skinning
                     </p>
                     <p>
                         <button type="button" class="btn btn-primary editFrameButton" onclick="adjustFrameBtn()" >
@@ -157,7 +157,7 @@
                         </button>
                     </p>
                     <p>
-                        <button type="button" class="btn btn-primary btn-success editFrameButton" onclick="saveAdjustedFrameBtn()" >
+                        <button type="button" class="btn btn-primary btn-info editFrameButton" onclick="saveAdjustedFrameBtn()" >
                             Guardar cambios realizados en el Frame
                         </button>
                     </p>
@@ -287,9 +287,9 @@
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
-                            <label for="percentDifferenceText" class="control-label">Parametro de diferenciacion (0-100):</label>
+                            <label for="percentDifferenceText" class="control-label">Parametro de diferenciación (0-100):</label>
                             <input type="text" id="percentDifferenceText" value="5"/>
-                            <div class="alert alert-info" role="alert">Nota: Cuanto mayor sea este valor mas diferencias habran entre los Frames de un sprite</div>
+                            <div class="alert alert-info" role="alert">Nota: Cuanto mayor sea este valor más diferencias habran entre los Frames de un sprite</div>
                         </div>
                     </form>
                 </div>
@@ -314,8 +314,8 @@
                         <div class="form-group">
                             <label for="imagen" class="control-label">Modo:</label>
                             <div class="btn-group" role="group" >
-                                <button type="button" class="btn btn-default" onclick="setModoTimeMsSlowDiff()">Mas rápido si son iguales</button>
-                                <button type="button" class="btn btn-default" onclick="setModoTimeMsFastDiff()">Mas rápido si son diferentes</button>
+                                <button type="button" class="btn btn-default" onclick="setModoTimeMsSlowDiff()">Más rápido si son iguales</button>
+                                <button type="button" class="btn btn-default" onclick="setModoTimeMsFastDiff()">Ms rápido si son diferentes</button>
                             </div>
                         </div>
                     </form>
