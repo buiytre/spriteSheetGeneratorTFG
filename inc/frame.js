@@ -26,12 +26,13 @@ Frame.prototype.getImageFrame = function(){
 };
 
 /**
- *  Metodo que descarga en el navegador del usuario la imagen del frame
+ * evalua el parecido del pixelOrig de imageDataOrig con el pixelDest de imageDataDest
+ * @param pixelOrig
+ * @param imageDataOrig
+ * @param pixelDest
+ * @param imageDataDest
+ * @returns {number}
  */
-Frame.prototype.downloadFrame = function(){
-    window.open(this.image.src);
-};
-
 Frame.prototype.eval = function(pixelOrig, imageDataOrig, pixelDest, imageDataDest){
     var pixelCoordOrig = pixelOrig.x*4+pixelOrig.y*imageDataOrig.width*4;
     var redOrig = imageDataOrig.data[pixelCoordOrig];
@@ -47,7 +48,13 @@ Frame.prototype.eval = function(pixelOrig, imageDataOrig, pixelDest, imageDataDe
     return diff / (255*4);
 };
 
-
+/**
+ * Indica si el point de dataOrig esta alrededor de la misma posición de dataDest y devuelve un valor indicando su diferencia
+ * @param point
+ * @param dataOrig
+ * @param dataDest
+ * @returns {number}
+ */
 Frame.prototype.isPointAround = function(point,dataOrig,dataDest){
     var diff = 0;
     var numPointsCompared = 0;
@@ -62,7 +69,13 @@ Frame.prototype.isPointAround = function(point,dataOrig,dataDest){
     return diff / numPointsCompared;
 };
 
-
+/**
+ * compara el frame actual con el canvas en la posicion x y
+ * @param canvas
+ * @param x
+ * @param y
+ * @returns {number}
+ */
 Frame.prototype.compareWithCanvas = function(canvas,x,y){
     var ctx = canvas.getContext('2d');
     var dataDest = ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -85,7 +98,17 @@ Frame.prototype.compareWithCanvas = function(canvas,x,y){
     return (diff / (dataOrig.width * dataOrig.height));
 };
 
-
+/**
+ * Compara el frameA posicionandolo con un desplazamiento xA,yA
+ * con el frameB posicionandolo en xB yB y retorna un numero del 0 al 1 indicando su diferencia
+ * @param frameA
+ * @param frameB
+ * @param xA
+ * @param yA
+ * @param xB
+ * @param yB
+ * @returns {number}
+ */
 Frame.prototype.compareWithFrame = function(frameA,frameB,xA,yA,xB,yB){
     var canv = document.createElement('canvas');
     var ctxt = canv.getContext('2d');

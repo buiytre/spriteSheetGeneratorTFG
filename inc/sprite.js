@@ -13,18 +13,21 @@ var Sprite = function(name){
     this.pos = new Array();
     this.timeMs = new Array();
     this.name = name;
-    this.timeAnimationInverval = null;
-    this.canvasAnimation = null;
     this.maxWidth = 0;
     this.maxHeight = 0;
 
-    this.nAnimation = 0;
-    this.canvasTmpExportAnimation = null;
-    this.timeCanvasAnimToExport = null;
-    this.nExport = 0;
-    this.encoder = null;
-    this.encoderEnd = false;
+    /////manejo animacion canvas
+    this.timeAnimationInterval = null;  // evento para la animación de la vista previa
+    this.canvasAnimation = null;        // canvas de la vista previa
+    this.nAnimation = 0;                // n de la animación de la vista previa
 
+    //manejo animacion exportacion
+    this.canvasTmpExportAnimation = null; //canvas para la exportación
+    this.timeCanvasToExport = null;   //evento para la exportación
+    this.nExport = 0;                     //n de la animación de la exportacion
+    this.encoder = null;                  //objeto de jsgif
+    this.encoderEnd = false;              // boleano que indica si la animación a terminado o no (para la exportacion)
+    //"constante por defecto"
     this.defaultMs = 200;
 };
 
@@ -78,6 +81,9 @@ Sprite.prototype.delFrame = function(n){
     this.nAnimation = 0;
 };
 
+/**
+ * Recalcula cual es la maxima amplitud y altura dentro de la animación
+ */
 Sprite.prototype.recalculateMaxWidthHeight = function(){
     this.maxWidth = 0;
     this.maxHeight = 0;
@@ -97,21 +103,41 @@ Sprite.prototype.getFrame = function(n){
     return this.frameList[n];
 };
 
+/**
+ * Devuelve los milisegundos del frame en la posición n
+ * @param n
+ * @returns {*}
+ */
 Sprite.prototype.getMs = function(n){
     if (this.timeMs.length <= n) throw "The sprite not contains frame number "+n;
     return this.timeMs[n];
 };
 
+/**
+ * Devuelve la posición durante la animación del frame n
+ * @param n
+ * @returns {*}
+ */
 Sprite.prototype.getPositionFrame = function(n){
     if (this.pos.length <= n) throw "The sprite not contains frame number "+n;
     return this.pos[n];
 };
 
+/**
+ * sobreescribe el intervalo de tiempo que se mostrara el frame n con ms
+ * @param n
+ * @param ms
+ */
 Sprite.prototype.setMs = function(n, ms){
     if (this.timeMs.length <= n) throw "The sprite not contains frame number "+n;
     this.timeMs[n] = ms;
 };
 
+/**
+ * Sustituye la posicion del frame n a pos
+ * @param n
+ * @param pos
+ */
 Sprite.prototype.setPositionFrame = function(n, pos){
     if (this.pos.length <= n) throw "The sprite not contains frame number "+n;
     this.pos[n].x = pos.x;
@@ -119,17 +145,19 @@ Sprite.prototype.setPositionFrame = function(n, pos){
     this.recalculateMaxWidthHeight();
 };
 
+/**
+ * devuelve true si existe el frame n
+ * @param n
+ * @returns {boolean}
+ */
 Sprite.prototype.existsFrame = function(n){
     return !(this.frameList.length <= n);
 };
 
 /**
- *  metodo que resetea la animación al primer frame
+ * metodo que inicializa la animacion en el canvas
+ * @param canvas
  */
-Sprite.prototype.resetAnimation = function(){
-    this.nAnimation = 0;
-};
-
 Sprite.prototype.paintAnimation = function(canvas){
     if (this.frameList.length != 0){
         this.canvasAnimation = canvas;
@@ -140,19 +168,30 @@ Sprite.prototype.paintAnimation = function(canvas){
     }
 };
 
-
+/**
+ * llamada que se encarga de manejar que frame se va pintar en cada momento en un canvas inicializado por la llamada
+ * paintAnimation
+ */
 Sprite.prototype.doPaintAnimation = function(){
-    if(this.timeAnimationInverval != null) clearTimeout(this.timeAnimationInverval);
+    if(this.timeAnimationInterval != null) clearTimeout(this.timeAnimationInterval);
     var ctx = this.canvasAnimation.getContext('2d');
     if (this.frameList.length > 0) {
         if (this.nAnimation >= this.frameList.length) this.nAnimation = 0;
         this.paintNextFrame(ctx, this.nAnimation, null, this.canvasAnimation);
         var time = this.timeMs[this.nAnimation];
         this.nAnimation = this.nAnimation + 1;
-        this.timeAnimationInverval = setTimeout(this.doPaintAnimation.bind(this), time);
+        this.timeAnimationInterval = setTimeout(this.doPaintAnimation.bind(this), time);
     }
 };
 
+/**
+ * pinta el frame nFrame en el canvas guardado en ctx
+ * si transparency contiene un color pintara este color en lugar de el transparente cuando el pixel lo sea.
+ * @param ctx
+ * @param nFrame
+ * @param transparency
+ * @param canvas
+ */
 Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency, canvas){
     var fr = this.frameList[nFrame];
     var position = this.pos[nFrame];
@@ -185,24 +224,42 @@ Sprite.prototype.paintNextFrame = function(ctx, nFrame, transparency, canvas){
     ctx.restore();
 };
 
+/**
+ * para el intervalo que llama a pintar la animación para dejar de pintarla
+ */
 Sprite.prototype.stopAnimation = function(){
-    if (this.timeAnimationInverval != null) clearInterval(this.timeAnimationInverval);
+    if (this.timeAnimationInterval != null) clearInterval(this.timeAnimationInterval);
 };
 
+/**
+ * devuelve el ancho maximo del sprite
+ * @returns {number}
+ */
 Sprite.prototype.getMaxWidth = function(){
     return this.maxWidth;
 };
 
+/**
+ * devuelve la altura maxima del sprite
+ * @returns {number}
+ */
 Sprite.prototype.getMaxHeight = function(){
     return this.maxHeight;
 };
 
+/**
+ * para el intervalo que llama a pintar la animación para dejar de pintarla en el canvas de exportación
+ */
 Sprite.prototype.stopExportToGif = function(){
-    if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
+    if (this.timeCanvasToExport != null) clearTimeout(this.timeCanvasToExport);
 };
 
+/**
+ * llamada que se encarga de manejar que frame se va pintar en cada momento en un canvas inicializado por la llamada
+ * exportToGif, ademas esta funcion parara cuando la animación se haya hecho una vez. (no entra en loop)
+ */
 Sprite.prototype.doPaintExportAnimation = function(){
-    if (this.timeCanvasAnimToExport != null) clearTimeout(this.timeCanvasAnimToExport);
+    if (this.timeCanvasToExport != null) clearTimeout(this.timeCanvasToExport);
     if (this.nExport < this.frameList.length){
         var ctx = this.canvasTmpExportAnimation.getContext('2d');
         this.paintNextFrame(ctx, this.nExport,"#00FF00",this.canvasTmpExportAnimation );
@@ -210,7 +267,7 @@ Sprite.prototype.doPaintExportAnimation = function(){
         this.encoder.setDelay(time);
         this.encoder.addFrame(ctx);
         this.nExport = this.nExport + 1;
-        this.timeCanvasAnimToExport = setTimeout(this.doPaintExportAnimation.bind(this),time);
+        this.timeCanvasToExport = setTimeout(this.doPaintExportAnimation.bind(this),time);
     }else{
         this.encoder.finish();
         this.encoderEnd = true;
@@ -218,6 +275,9 @@ Sprite.prototype.doPaintExportAnimation = function(){
     }
 };
 
+/**
+ * Se encarga de inicializar el proceso de pintar en el canvas que se utilizara para exportar a gif
+ */
 Sprite.prototype.exportToGif = function(){
     this.canvasTmpExportAnimation = document.createElement("canvas");
     this.canvasTmpExportAnimation.width = this.maxWidth;
@@ -233,19 +293,31 @@ Sprite.prototype.exportToGif = function(){
     this.doPaintExportAnimation();
 };
 
+/**
+ * devuelve -1 si todavia se esta realizando la exportación o los datos que corresponden con el gif de la animación del sprite
+ * @returns {*}
+ */
 Sprite.prototype.getResultGif = function(){
     if (!this.encoderEnd) return -1;
     var binary_gif = this.encoder.stream().getData();
     return  'data:image/gif;base64,'+encode64(binary_gif);
 };
 
+/**
+ * devuelve el numero de frames que tiene la animación
+ * @returns {Number}
+ */
 Sprite.prototype.getNumberFrames = function(){
     return this.frameList.length;
 };
 
+/**
+ * interpola el frame que va despues de no
+ * @param no
+ */
 Sprite.prototype.interpolateNextFrame = function(no){
     var nf = no+1;
-    if (this.frameList.length <= no || this.frameList.length <= nf) return null;
+    if (this.frameList.length <= no || this.frameList.length <= nf) return;
     var canv = document.createElement("canvas");
     var ctxt = canv.getContext('2d');
     // el tiempo origen sera 0, y el final timeMs. El frame lo pondremos justo entre medio de los dos
@@ -306,6 +378,11 @@ Sprite.prototype.interpolateNextFrame = function(no){
 };
 
 
+/**
+ * inserta el frame del parametro en la posicion n
+ * @param frame
+ * @param n
+ */
 Sprite.prototype.insertFrameNextTo = function(frame,n){
     var i = 0;
     for (i = this.frameList.length; i>n+1; i--){
@@ -318,14 +395,30 @@ Sprite.prototype.insertFrameNextTo = function(frame,n){
     this.timeMs[i] = 100;
 };
 
+/**
+ * Funcion para calcular la diferencia en modo SlowDiff
+ * @param dif
+ * @param count
+ * @returns {number}
+ */
 Sprite.prototype.autoTuneCalcSlowDiffFunc = function(dif, count){
-    return dif*2 + 200*count;
+    return dif*200 + 200*count;
 };
 
+/**
+ * Funcion para calcular la diferencia en modo FastDiff
+ * @param dif
+ * @param count
+ * @returns {number}
+ */
 Sprite.prototype.autoTuneCalcFastDiffFunc = function(dif, count){
-    return (200 - dif*2) + 200*count;
+    return (200 - dif*200) + 200*count;
 };
 
+/**
+ * Funcion que calcula el tiempo entre frame y frame de manera automatica segun las diferencias que haya entre frames (utilizando la funcion pasada por parametro)
+ * @param usedFunc
+ */
 Sprite.prototype.autoTuneTimeMs = function(usedFunc){
     for (var i=0; i < this.frameList.length - 1; i++){
         var frame  = this.frameList[i];
@@ -359,12 +452,12 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[i + 1].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[i + 1].x, this.pos[i + 1].y);
-                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y)*100;
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
                 } else {
                     ctxt.clearRect(0, 0, canv.width, canv.height);
                     imageNext = this.frameList[0].getImageFrame();
                     ctxt.drawImage(imageNext, this.pos[0].x, this.pos[0].y);
-                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y)*100;
+                    dif = frame.compareWithCanvas(canv, this.pos[i].x, this.pos[i].y);
                     end = true;
                 }
             }else{
@@ -377,11 +470,9 @@ Sprite.prototype.autoTuneTimeMs = function(usedFunc){
     }
 };
 
-Sprite.prototype.setDefaultMs = function(param){
-    this.defaultMs = param;
-};
-
-
+/**
+ * funcion que ordena la animacion de los sprites segun la diferencia que haya entre ellos
+ */
 Sprite.prototype.reorganizeByDiffAuto = function(){
     this.frameList.sort(this.frameList[0].compareWithFrame)
 };

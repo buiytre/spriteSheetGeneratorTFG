@@ -52,8 +52,8 @@
                             <li class="divider"></li>
                             <li><a href="#" data-toggle="modal" data-target="#changeMSAllModal">Cambiar intervalo entre Frames</a></li>
                             <li class="divider"></li>
-                            <li><a href="#" data-toggle="modal" data-target="#autoDetectFramesModal">AutoDetectar animaciones</a></li>
-                            <li><a href="#" data-toggle="modal" data-target="#autoDetectMsModal">AutoDetectar tiempo entre Frames</a></li>
+                            <li><a href="#" data-toggle="modal" data-target="#autoDetectFramesModal">Auto Detectar animaciones</a></li>
+                            <li><a href="#" data-toggle="modal" data-target="#autoDetectMsModal">Auto Detectar tiempo entre Frames</a></li>
                         </ul>
                     </li>
 
@@ -129,7 +129,7 @@
                         </button>
                     </p>
                     <p>
-                        <button type="button"  class="btn btn-primary" data-toggle="modal" data-target="#autoDetectMsModal" >Auto Calcular Ms entre Frames</button>
+                        <button type="button"  class="btn btn-primary" data-toggle="modal" data-target="#autoDetectMsModal" >Auto Detectar tiempo entre Frames</button>
                     </p>
                     <p>
                         <button type="button"  class="btn btn-primary"  data-toggle="modal" data-target="#changeMSAllModal">Cambiar intervalo entre Frames</button>
@@ -140,7 +140,7 @@
                 <div id="editFrameMode">
                     <p>
                         <div id="milisecondsText"></div>
-                        <button type="button"  class="btn btn-primary editFrameButton"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo</button>
+                        <button type="button"  class="btn btn-primary editFrameButton"  data-toggle="modal" data-target="#changeMSFrameModal">Cambiar intervalo de tiempo</button>
                     </p>
 
                     <p>
@@ -282,7 +282,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="autoDetectFramesModalLabel">AutoDetectar Frames</h4>
+                    <h4 class="modal-title" id="autoDetectFramesModalLabel">Auto Detectar Frames</h4>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -295,7 +295,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="detectFrames()">Aceptar</button>
+                    <button type="button" class="btn btn-primary" onclick="detectFramesAnimationsBtn()">Aceptar</button>
                 </div>
             </div>
         </div>
@@ -307,7 +307,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="autoDetectMsModalLabel">AutoDetectar velocidad entre Frame y Frame</h4>
+                    <h4 class="modal-title" id="autoDetectMsModalLabel">Auto Detectar tiempo entre Frames</h4>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -315,7 +315,7 @@
                             <label for="imagen" class="control-label">Modo:</label>
                             <div class="btn-group" role="group" >
                                 <button type="button" class="btn btn-default" onclick="setModoTimeMsSlowDiff()">Más rápido si son iguales</button>
-                                <button type="button" class="btn btn-default" onclick="setModoTimeMsFastDiff()">Ms rápido si son diferentes</button>
+                                <button type="button" class="btn btn-default" onclick="setModoTimeMsFastDiff()">Más rápido si son diferentes</button>
                             </div>
                         </div>
                     </form>
@@ -334,7 +334,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="changeMSAllModalLabel">Cambiar Ms entre Frame y Frame</h4>
+                    <h4 class="modal-title" id="changeMSAllModalLabel">Cambiar intervalo entre Frames</h4>
                 </div>
                 <div class="modal-body">
                     <form>
@@ -360,7 +360,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="changeMSFrameModalLabel">Cambiar Ms hasta el siguiente Frame</h4>
+                    <h4 class="modal-title" id="changeMSFrameModalLabel">Cambiar intervalo de tiempo hasta el siguiente Frame</h4>
                 </div>
                 <div class="modal-body">
                     <form>

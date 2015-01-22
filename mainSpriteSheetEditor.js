@@ -73,6 +73,105 @@ const FASTDIF = 2;
 var listOfFrames = new Array();
 
 var busy = false;
+
+
+/*******************************************
+ *  EVENTOS DE LA PAGINA
+ *****************************************/
+/**
+ * evento de carga de la pagina
+ */
+window.onload= function(){
+    canvas = document.getElementById('preview');
+    ctx = canvas.getContext('2d');
+
+    var pw = canvas.parentNode.clientWidth;
+    var ph = canvas.parentNode.clientHeight;
+
+    canvas.height = pw * 0.95 * (canvas.height/canvas.width);
+    canvas.width = pw * 0.95;
+    canvas.style.top = (ph-canvas.height)/2 + "px";
+    canvas.style.left = (pw-canvas.width)/2 + "px";
+
+    var canvasSprite = document.getElementById('previewSpriteCanvas');
+    var ctxSprite = canvas.getContext('2d');
+
+    pw = canvas.parentNode.clientWidth;
+    ph = canvas.parentNode.clientHeight;
+
+    canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
+    canvasSprite.width = pw * 0.17;
+    canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
+    canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
+
+    transparencyMatrix = new Array();
+    for(var i=0;i<canvas.width;i++){
+        transparencyMatrix[i]=new Array();
+        for(var j=0;j<canvas.height;j++){
+            transparencyMatrix[i][j]=true;
+        }
+    }
+    document.addEventListener('onselectstart',nullFunction,false);
+    document.addEventListener('contextmenu',nullFunction,false);
+    canvas.addEventListener('click',nullFunction,false);
+    canvas.addEventListener('contextmenu',nullFunction,false);
+    canvas.addEventListener('mousedown', nullFunction, false);
+    canvas.addEventListener('mouseup', nullFunction, false);
+    canvas.addEventListener('mousemove', nullFunction, false);
+    canvas.addEventListener('dblclick', nullFunction, false);
+
+    canvas.addEventListener('mousedown', doMouseDown, false);
+    canvas.addEventListener('mouseup', doMouseUp, false);
+    canvas.addEventListener('mousemove', doMouseMove, false);
+    canvas.addEventListener('dblclick', doMouseDblClick, false);
+    var inputFile = document.getElementById("imagen");
+    inputFile.addEventListener('change', function (event) {
+        var file = event.target.files[0];
+
+        var url = URL.createObjectURL(file);
+        /*        imgTmp.onload = function(){
+         loadImage();
+         pinta();
+         pintaSelection();
+         };*/
+        imgTmp.src = url;
+    });
+    $(window).resize(function(){
+        canvas = document.getElementById('preview');
+        ctx = canvas.getContext('2d');
+
+        var pw = canvas.parentNode.clientWidth;
+        var ph = canvas.parentNode.clientHeight;
+
+        canvas.height = pw * 0.9* (canvas.height/canvas.width);
+        canvas.width = pw * 0.99;
+        canvas.style.top = (ph-canvas.height)/2 + "px";
+        canvas.style.left = (pw-canvas.width)/2 + "px";
+        var canvasSprite = document.getElementById('previewSpriteCanvas');
+        var ctxSprite = canvas.getContext('2d');
+
+        pw = canvas.parentNode.clientWidth;
+        ph = canvas.parentNode.clientHeight;
+
+        canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
+        canvasSprite.width = pw * 0.17;
+        canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
+        canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
+        pinta();
+        pintaSelection();
+        imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+    });
+    sheet = new Spritesheet();
+    putCanvasInModeImport();
+    imgTmp = document.createElement('img');
+    imgTmp.src = "resources/white.png";
+    loadImageTemp();
+};
+
+
+/*******************************************
+ *  Manejo del raton
+ *****************************************/
 /**
  * Funcion que devuelve la posicion del raton en el canvas
  * @param cv
@@ -119,6 +218,141 @@ function doMouseDown(event){
     checkMoveAndResizeSelection();
 }
 
+/**
+ * evento de levantar el click del raton
+ * @param event
+ */
+function doMouseUp(event){
+    switch (event.which){
+        case 1:
+            isDownLeft = false;
+            break;
+        case 3:
+            isDownRight = false;
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+ * Evento doble click del raton
+ * @param event
+ */
+function doMouseDblClick(event){
+    switch (event.which){
+        case 1:
+            if (modeCanvas == IMPORTEDIMAGE){
+                if (transparentColor){
+                    getSelectionAroundPoint(mousePos,imageDataPixels);
+                    pinta();
+                    pintaSelection();
+                }
+                break;
+            }
+            break;
+    }
+}
+
+
+/**
+ * evento que controla el movimiento del raton
+ * @param event
+ */
+function doMouseMove(event) {
+    mousePos = getMousePos(canvas, event);
+    // $("#info").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
+    switch (modeCanvas) {
+        case IMPORTEDIMAGE:
+            if (isDownRight) {
+                var incrX = (mousePos.x - startClickRight.x);
+                var incrY = (mousePos.y - startClickRight.y);
+                posImage.x = posImage.x + incrX;
+                posImage.y = posImage.y + incrY;
+                if (selectionTL.x && selectionTL.y && selectionBR.x && selectionBR.y){
+                    selectionTL.x = selectionTL.x + incrX;
+                    selectionTL.y = selectionTL.y + incrY;
+                    selectionBR.x = selectionBR.x + incrX;
+                    selectionBR.y = selectionBR.y + incrY;
+                }
+                imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+                startClickRight = getMousePos(canvas, event);
+            }
+            invertSelectionTLBR();
+            changeCursorMoveOrSelection();
+            if (isDownLeft) {
+                if (selectionMove || selectionResize) {
+                    var incrementX = (mousePos.x - startClickLeft.x);
+                    var incrementY = (mousePos.y - startClickLeft.y);
+                    startClickLeft = getMousePos(canvas, event);
+                    if (selectionMove) {
+                        selectionTL.x = selectionTL.x + incrementX;
+                        selectionBR.x = selectionBR.x + incrementX;
+                        selectionTL.y = selectionTL.y + incrementY;
+                        selectionBR.y = selectionBR.y + incrementY;
+                    } else {
+                        if (selectionResizeLeft) {
+                            selectionTL.x = selectionTL.x + incrementX;
+                        }
+                        if (selectionResizeRight) {
+                            selectionBR.x = selectionBR.x + incrementX;
+
+                        }
+                        if (selectionResizeTop) {
+                            selectionTL.y = selectionTL.y + incrementY;
+                        }
+                        if (selectionResizeBot) {
+                            selectionBR.y = selectionBR.y + incrementY;
+                        }
+                    }
+                } else { // crear selection
+                    selectionTL.x = startClickLeft.x;
+                    selectionTL.y = startClickLeft.y;
+                    selectionBR.x = mousePos.x;
+                    selectionBR.y = mousePos.y;
+                }
+            }
+            pinta();
+            pintaSelection();
+            break;
+        case FRAMETOSELECT:
+            if (isDownRight) {
+                var incrY = (mousePos.y - startClickRight.y);
+                var maxY = sheet.maxYRect(spriteSelectedName);
+                if (posImage.y + incrY < maxY){
+                    posImage.y = posImage.y + incrY;
+                }
+                if (posImage.y < 0) posImage.y = 0;
+                startClickRight = getMousePos(canvas, event);
+            }
+            pinta();
+            break;
+        case FRAMESELECTED:
+            if (isDownLeft){
+                switch (modeFrame){
+                    case MODEEDIT:
+                        posSprAdj.x = posSprAdj.x + (mousePos.x - startClickLeft.x);
+                        posSprAdj.y = posSprAdj.y + (mousePos.y - startClickLeft.y);
+                        break;
+                    case MODEADJUST:
+                        posFrame.x = posFrame.x + (mousePos.x - startClickLeft.x);
+                        posFrame.y = posFrame.y + (mousePos.y - startClickLeft.y);
+                        break;
+                }
+                startClickLeft = getMousePos(canvas, event);
+            }
+            pinta();
+            pintaSelection();
+            break;
+    }
+}
+/**
+ * Funciones para el manejo del raton en el canvas (selección)
+ */
+/**
+ * esta función invierte el TL y BR de la selección si el BR pasa a estar mas arriba o mas
+ * a la izquierda que el TL
+ */
 function invertSelectionTLBR(){
     if (selectionTL.x > selectionBR.x){
         var newSelectionTL = new Point();
@@ -156,6 +390,9 @@ function invertSelectionTLBR(){
     }
 }
 
+/**
+ * funcion que se encarga de cambiar el cursor del raton si esta dentro de una selección
+ */
 function changeCursorMoveOrSelection(){
     var selectionInside = false;
     var rl = false;
@@ -260,157 +497,30 @@ function checkMoveAndResizeSelection(){
     }
 }
 
-/**
- * evento de levantar el click del raton
- * @param event
+/***
+ * Manejo de zoom
  */
-function doMouseUp(event){
-    switch (event.which){
-        case 1:
-//            endClickLeft = getMousePos(canvas, event);
-            isDownLeft = false;
-            break;
-        case 3:
-//            endClickRight = getMousePos(canvas,event);
-            isDownRight = false;
-            break;
-        default:
-            break;
-    }
-}
-
-function doMouseDblClick(event){
-    switch (event.which){
-    case 1:
-         if (modeCanvas == IMPORTEDIMAGE){
-                if (transparentColor){
-                    getSelectionAroundPoint(mousePos,imageDataPixels);
-                    pinta();
-                    pintaSelection();
-                }
-                break;
-        }
-        break;
-    }
-}
-
-function marcaFrame(){
-    selectedFrame = sheet.marcaFrameSelected(spriteSelectedName, mousePos,posImage.y);
+/**
+ * click en el boton Zoom in, hace que se amplie el zoom
+ */
+function zoomInBtn(){
+    currentScale += 0.1;
     pinta();
-    pintaSelection();
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
 }
-
-
-function selectFrame(){
-    selectedFrame = sheet.getSelectionedFrame($("#spriteList").val());
-    if (selectedFrame != -1){
-        posSprAdj.x = 0;
-        posSprAdj.y = 0;
-        imageSprAdj = sheet.getSelectionImage(spriteSelectedName,selectedFrame);
-        $("#milisecondsText").val(sheet.getMs(spriteSelectedName,selectedFrame));
-        var p = sheet.getPositionFrame(spriteSelectedName,selectedFrame);
-        posFrame.x = p.x;
-        posFrame.y = p.y;
-        modeCanvas = FRAMESELECTED;
-    }
-    pinta();
-    pintaSelection();
-}
-
-
 
 /**
- * evento que controla el movimiento del raton
- * @param event
+ * click en el boton Zoom Out, hace que se reduzca el zoom
  */
-function doMouseMove(event) {
-    mousePos = getMousePos(canvas, event);
-   // $("#info").text( "x: " + mousePos.x + " y: "+ mousePos.y + " selectionTL x: " + selectionTL.x + " y: " + selectionTL.y + " selectionBR x: " + selectionBR.x + " y: " + selectionBR.y);
-    switch (modeCanvas) {
-        case IMPORTEDIMAGE:
-            if (isDownRight) {
-                var incrX = (mousePos.x - startClickRight.x);
-                var incrY = (mousePos.y - startClickRight.y);
-                posImage.x = posImage.x + incrX;
-                posImage.y = posImage.y + incrY;
-                if (selectionTL.x && selectionTL.y && selectionBR.x && selectionBR.y){
-                    selectionTL.x = selectionTL.x + incrX;
-                    selectionTL.y = selectionTL.y + incrY;
-                    selectionBR.x = selectionBR.x + incrX;
-                    selectionBR.y = selectionBR.y + incrY;
-                }
-                imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-                startClickRight = getMousePos(canvas, event);
-            }
-            invertSelectionTLBR();
-            changeCursorMoveOrSelection();
-            if (isDownLeft) {
-                if (selectionMove || selectionResize) {
-                    var incrementX = (mousePos.x - startClickLeft.x);
-                    var incrementY = (mousePos.y - startClickLeft.y);
-                    startClickLeft = getMousePos(canvas, event);
-                    if (selectionMove) {
-                        selectionTL.x = selectionTL.x + incrementX;
-                        selectionBR.x = selectionBR.x + incrementX;
-                        selectionTL.y = selectionTL.y + incrementY;
-                        selectionBR.y = selectionBR.y + incrementY;
-                    } else {
-                        if (selectionResizeLeft) {
-                            selectionTL.x = selectionTL.x + incrementX;
-                        }
-                        if (selectionResizeRight) {
-                            selectionBR.x = selectionBR.x + incrementX;
-
-                        }
-                        if (selectionResizeTop) {
-                            selectionTL.y = selectionTL.y + incrementY;
-                        }
-                        if (selectionResizeBot) {
-                            selectionBR.y = selectionBR.y + incrementY;
-                        }
-                    }
-                } else { // crear selection
-                    selectionTL.x = startClickLeft.x;
-                    selectionTL.y = startClickLeft.y;
-                    selectionBR.x = mousePos.x;
-                    selectionBR.y = mousePos.y;
-                }
-            }
-            pinta();
-            pintaSelection();
-            break;
-        case FRAMETOSELECT:
-            if (isDownRight) {
-                var incrY = (mousePos.y - startClickRight.y);
-                var maxY = sheet.maxYRect(spriteSelectedName);
-                if (posImage.y + incrY < maxY){
-                    posImage.y = posImage.y + incrY;
-                }
-                if (posImage.y < 0) posImage.y = 0;
-                startClickRight = getMousePos(canvas, event);
-            }
-            pinta();
-            break;
-        case FRAMESELECTED:
-            if (isDownLeft){
-                switch (modeFrame){
-                    case MODEEDIT:
-                        posSprAdj.x = posSprAdj.x + (mousePos.x - startClickLeft.x);
-                        posSprAdj.y = posSprAdj.y + (mousePos.y - startClickLeft.y);
-                        break;
-                    case MODEADJUST:
-                        posFrame.x = posFrame.x + (mousePos.x - startClickLeft.x);
-                        posFrame.y = posFrame.y + (mousePos.y - startClickLeft.y);
-                        break;
-                }
-                startClickLeft = getMousePos(canvas, event);
-            }
-            pinta();
-            pintaSelection();
-            break;
-    }
+function zoomOutBtn(){
+    currentScale -= 0.1;
+    pinta();
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
 }
 
+/**
+ * Funciones de pintar en canvas
+ */
 /**
  * funcion que pinta el recuadro de seleccion
  */
@@ -456,6 +566,9 @@ function clear(){
     ctx.clearRect(0,0,canvas.width, canvas.height);
 }
 
+/**
+ * Pinta la todos los Frames de una animacion con transparencias en el modo Onion Skining
+ */
 function pintaTransparency(){
     ctx.save();
     ctx.globalAlpha = 0.5;
@@ -489,7 +602,6 @@ function pinta(){
             break;
         case FRAMETOSELECT:
             sheet.paintSelectionRect($("#spriteList").val(), mousePos, canvas, posImage.y);
-            //sheet.paintFrameSelectionImage(spriteName,canvas);
             break;
         case FRAMESELECTED:
             if (bTransparencyPreview){
@@ -502,7 +614,186 @@ function pinta(){
     }
     ctx.restore();
 }
+/**
+ * Funciones para el modo importar imagen
+ */
 
+/**
+ * Funcion que se ejecuta en cuanto se carga una imagen en la aplicación
+ */
+function loadImageTemp(){
+    img = document.createElement('img');
+    img.src = imgTmp.src;
+    loadImage();
+    pinta();
+    pintaSelection();
+    $('#loadImageModal').modal('hide')
+}
+
+/**
+ * Esta funcion es la funcion que acepta definitivamente el archivo seleccionado en el menu de importar
+ */
+function loadImage(){
+    currentScale = 1;
+    modeCanvas = IMPORTEDIMAGE;
+    posImage = new Point(0,0);
+    // clear();
+    selectionTL.x = undefined;
+    selectionTL.y = undefined;
+    selectionBR.x = undefined;
+    selectionBR.y = undefined;
+    pinta();
+    transparentColor = false;
+    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+    detectTransparentColor();
+}
+
+/**
+ * Funcion que detecta si la imagen introducida tiene el color alfa definido
+ */
+function detectTransparentColor(){
+    var canv = document.createElement("canvas");
+    canv.width = img.width;
+    canv.height = img.height;
+    var cnt = canv.getContext('2d');
+    if (img.width && img.height) cnt.drawImage(img,0,0,canv.width,canv.height);
+    var imageTransParentData = ctx.getImageData(0,0,canv.width,canv.height);
+    for (var x=0; x<imageTransParentData.width && !transparentColor; x++){
+        for (var y=0; y<imageTransParentData.height && !transparentColor; y++){
+            var pixelCoord = x*4+y*imageTransParentData.width*4;
+            if (imageTransParentData.data[pixelCoord+IMGDATAALPHA] == 0){
+                transparentColor = true;
+            }
+        }
+    }
+}
+
+
+function processLoop( actionFunc, numTimes, doneFunc ) {
+    var i = 0;
+    var f = function () {
+        if (i < numTimes) {
+            actionFunc( i++ );  // closure on i
+            setTimeout( f, 10 )
+        }
+        else if (doneFunc) {
+            doneFunc();
+        }
+    };
+    f();
+}
+
+imageData
+/**
+ * Devuelve la seleccion alrededor de un punto seleccionado (automaticamente
+ * @param point
+ * @param imageData
+ */
+function getSelectionAroundPoint(point, imageData){
+    puntosVisitados = new Array();
+    for(var i=0;i<imageData.width;i++){
+        puntosVisitados[i]=new Array();
+        for(var j=0;j<imageData.height;j++){
+            puntosVisitados[i][j]=false;
+        }
+    }
+
+    point.x = Math.round(point.x);
+    point.y = Math.round(point.y);
+    markPixel(point.x, point.y,true,imageData);
+    var minX = point.x - 1;
+    var maxX = point.x + 1;
+    var minY = point.y - 1;
+    var maxY = point.y + 1;
+
+    var finish = false;
+    while (!finish){
+        finish = true;
+        for (var y = minY; y <= maxY; y++){
+            for (var x = minX; x <= maxX; x++){
+                if (!pixelIsMarked(x,y, imageData) && !isTransparent(x,y,imageData) && isNeighbourOfMarkedPixel(x,y, imageData)){
+                    if (markPixel(x,y,true,imageData)){
+                        finish = false;
+                        if (x - 1 < minX) minX = x - 1;
+                        if (x + 1 > maxX) maxX = x + 1;
+                        if (y - 1 < minY) minY = y - 1;
+                        if (y + 1 > maxY) maxY = y + 1;
+                    }
+                }
+            }
+        }
+    }
+    selectionTL.x = minX + 1;
+    selectionTL.y = minY + 1;
+    selectionBR.x = maxX - 1;
+    selectionBR.y = maxY - 1;
+}
+
+/**
+ * Funcion auxiliar de getSelectionAroundPoint que se utiliza para saber si ya hemos visitado un pixel
+ * @param x
+ * @param y
+ * @param imageData
+ * @returns {*}
+ */
+function pixelIsMarked(x,y,imageData){
+    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
+        return false;
+    }
+    return puntosVisitados[x][y];
+}
+/**
+ * Funcion auxiliar de getSelectionAroundPoint que se utiliza para saber si un vecino del punto x y esta visitado
+ * @param x
+ * @param y
+ * @param imageData
+ * @returns {*}
+ */
+function isNeighbourOfMarkedPixel(x,y,imageData){
+    return (
+    pixelIsMarked(x - 1,y, imageData)
+    || pixelIsMarked(x + 1,y, imageData)
+    || pixelIsMarked(x, y - 1, imageData)
+    || pixelIsMarked(x, y + 1, imageData)
+    );
+}
+
+/**
+ * Funcion auxiliar de getSelectionAroundPoint que se utiliza para marcar un pixel como visitado
+ * @param x
+ * @param y
+ * @param value
+ * @param imageData
+ * @returns {boolean}
+ */
+function markPixel(x,y, value, imageData){
+    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
+        return false;
+    }
+    puntosVisitados[x][y] = value;
+    return true;
+}
+/**
+ * indica si un pixel en el punto x y es transparente
+ * @param x
+ * @param y
+ * @param dataImage
+ * @returns {boolean}
+ */
+function isTransparent(x,y, dataImage){
+    var pixelCoord = x*4+y*dataImage.width*4;
+    if (dataImage.data[pixelCoord+IMGDATAALPHA] == 0){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+/****************
+ *
+ *  Funciones para la funcionalidad de añadir Frames
+ *
+ **********/
 /**
  * Añade la imagen del canvas que va desde ori hasta dest como frame del sprite seleccionado
  * @param ori
@@ -537,150 +828,72 @@ function getSelectedFrame(ori, dest, canv){
 
     return (new Frame(dataURL));
 }
-
 /**
- * evento de carga de la pagina
+ * Marca un frame en el modo Sprite
  */
-window.onload= function(){
-    canvas = document.getElementById('preview');
-    ctx = canvas.getContext('2d');
-
-    var pw = canvas.parentNode.clientWidth;
-    var ph = canvas.parentNode.clientHeight;
-
-    canvas.height = pw * 0.95 * (canvas.height/canvas.width);
-    canvas.width = pw * 0.95;
-    canvas.style.top = (ph-canvas.height)/2 + "px";
-    canvas.style.left = (pw-canvas.width)/2 + "px";
-
-    var canvasSprite = document.getElementById('previewSpriteCanvas');
-    var ctxSprite = canvas.getContext('2d');
-
-    pw = canvas.parentNode.clientWidth;
-    ph = canvas.parentNode.clientHeight;
-
-    canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
-    canvasSprite.width = pw * 0.17;
-    canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
-    canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
-
-    transparencyMatrix = new Array();
-    for(var i=0;i<canvas.width;i++){
-        transparencyMatrix[i]=new Array();
-        for(var j=0;j<canvas.height;j++){
-            transparencyMatrix[i][j]=true;
-        }
-    }
-    document.addEventListener('onselectstart',nullFunction,false);
-    document.addEventListener('contextmenu',nullFunction,false);
-    canvas.addEventListener('click',nullFunction,false);
-    canvas.addEventListener('contextmenu',nullFunction,false);
-    canvas.addEventListener('mousedown', nullFunction, false);
-    canvas.addEventListener('mouseup', nullFunction, false);
-    canvas.addEventListener('mousemove', nullFunction, false);
-    canvas.addEventListener('dblclick', nullFunction, false);
-
-    canvas.addEventListener('mousedown', doMouseDown, false);
-    canvas.addEventListener('mouseup', doMouseUp, false);
-    canvas.addEventListener('mousemove', doMouseMove, false);
-    canvas.addEventListener('dblclick', doMouseDblClick, false);
-    var inputFile = document.getElementById("imagen");
-    inputFile.addEventListener('change', function (event) {
-        var file = event.target.files[0];
-
-        var url = URL.createObjectURL(file);
-/*        imgTmp.onload = function(){
-            loadImage();
-            pinta();
-            pintaSelection();
-        };*/
-        imgTmp.src = url;
-    });
-    $(window).resize(function(){
-        canvas = document.getElementById('preview');
-        ctx = canvas.getContext('2d');
-
-        var pw = canvas.parentNode.clientWidth;
-        var ph = canvas.parentNode.clientHeight;
-
-        canvas.height = pw * 0.9* (canvas.height/canvas.width);
-        canvas.width = pw * 0.99;
-        canvas.style.top = (ph-canvas.height)/2 + "px";
-        canvas.style.left = (pw-canvas.width)/2 + "px";
-        var canvasSprite = document.getElementById('previewSpriteCanvas');
-        var ctxSprite = canvas.getContext('2d');
-
-        pw = canvas.parentNode.clientWidth;
-        ph = canvas.parentNode.clientHeight;
-
-        canvasSprite.height = pw * 0.5 * (canvas.height/canvas.width);
-        canvasSprite.width = pw * 0.17;
-        canvasSprite.style.top = (ph-canvasSprite.height)/2 + "px";
-        canvasSprite.style.left = (pw-canvasSprite.width)/2 + "px";
-        pinta();
-        pintaSelection();
-        imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-    });
-    sheet = new Spritesheet();
-    putCanvasInModeImport();
-    imgTmp = document.createElement('img');
-    imgTmp.src = "white.png";
-    loadImageTemp();
-};
-
-
-/**
- * Funcion que se ejecuta an cuanto se carga la imagen
- */
-function loadImageTemp(){
-    img = document.createElement('img');
-    img.src = imgTmp.src;
-    loadImage();
+function marcaFrame(){
+    selectedFrame = sheet.marcaFrameSelected(spriteSelectedName, mousePos,posImage.y);
     pinta();
     pintaSelection();
-    $('#loadImageModal').modal('hide')
-}
-
-function loadImage(){
-    currentScale = 1;
-    modeCanvas = IMPORTEDIMAGE;
-    posImage = new Point(0,0);
-   // clear();
-    selectionTL.x = undefined;
-    selectionTL.y = undefined;
-    selectionBR.x = undefined;
-    selectionBR.y = undefined;
-    pinta();
-    transparentColor = false;
-    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-    detectTransparentColor();
 }
 
 
-function detectTransparentColor(){
-    var canv = document.createElement("canvas");
-    canv.width = img.width;
-    canv.height = img.height;
-    var cnt = canv.getContext('2d');
-    if (img.width && img.height) cnt.drawImage(img,0,0,canv.width,canv.height);
-    var imageTransParentData = ctx.getImageData(0,0,canv.width,canv.height);
-    for (var x=0; x<imageTransParentData.width && !transparentColor; x++){
-        for (var y=0; y<imageTransParentData.height && !transparentColor; y++){
-            var pixelCoord = x*4+y*imageTransParentData.width*4;
-            if (imageTransParentData.data[pixelCoord+IMGDATAALPHA] == 0){
-                transparentColor = true;
+function newAreasToCheck(areaToCheck,i, frameTL, frameBR, pointLooking){
+    var pActuBR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
+    if (isFrameParciallyInArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR) || isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+        if (isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+            //creamos el siguiente cuadrante a la derecha de la imagen
+            var quadTL = new Point(frameBR.x+1,frameTL.y);
+            var quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
+            areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
+
+            //Creamos el cuadrante que queda abajo del sprite
+            var quad2TL =  new Point(areaToCheck[i].pTL.x, frameBR.y+1);
+            var quad2BR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
+            areaToCheck[areaToCheck.length] = {pTL:quad2TL,pBR:quad2BR};
+//            ctx.strokeRect(quad2TL.x, quad2TL.y, quad2BR.x - quad2TL.x, quad2BR.y - quad2TL.y);
+
+            // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
+            pActuBR.x = frameTL.x-1;
+            pActuBR.y = frameBR.y;
+        }else if(isAreaInsideFrame(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+            //Si el frame ocupa el area ya estamos
+            pActuBR.x = areaToCheck[i].pTL.x; // we are done
+            pActuBR.y = areaToCheck[i].pTL.y; // we are done
+        }else{
+            //el frame se sale por algun lado
+            //si no sale por la derecha creamos el area a la derecha del frame
+            if (!isFrameOutsideRight(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
+                var quadTL  = new Point(frameBR.x+1,pointLooking.y);
+                var quadBR;
+                if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
+                    quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
+                }else{
+                    quadBR = new Point(areaToCheck[i].pBR.x, areaToCheck[i].pBR.y);
+                }
+                areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
             }
-         }
-    }
-}
 
-function isTransparent(x,y, dataImage){
-    var pixelCoord = x*4+y*dataImage.width*4;
-    if (dataImage.data[pixelCoord+IMGDATAALPHA] == 0){
-        return true;
-    }else{
-        return false;
+            if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
+                //Creamos el cuadrante que queda abajo del sprite
+                var quadTL2 = new Point(areaToCheck[i].pTL.x, frameBR.y+1);
+                var quadBR2 = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
+                areaToCheck[areaToCheck.length] = {pTL:quadTL2,pBR:quadBR2};
+                pActuBR.y = frameBR.y; //cambiamos la zona actual para no solaparnos con la nueva zona
+            }
+
+            if (!isFrameOutsideLeft(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
+                // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
+                pActuBR.x =  frameTL.x-1;
+            }else{
+                //la izquierda del frame le toca a otro area y entonces ya hemos acabado en esta
+                pActuBR.x = areaToCheck[i].pTL.x; // we are done
+                pActuBR.y = areaToCheck[i].pTL.y; // we are done
+            }
+        }
     }
+    areaToCheck[i].pBR.x = pActuBR.x;
+    areaToCheck[i].pBR.y = pActuBR.y;
 }
 
 function isFrameCompletelyInsideArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFrameBR){
@@ -733,147 +946,52 @@ function isFrameParciallyInArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFram
     }
 }
 
-function newAreasToCheck(areaToCheck,i, frameTL, frameBR, pointLooking){
-//    pinta();
-//    ctx.fillRect(frameTL.x, frameTL.y, frameBR.x - frameTL.x, frameBR.y - frameTL.y);
-//    ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
-    var pActuBR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
-    if (isFrameParciallyInArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR) || isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
-        if (isFrameCompletelyInsideArea(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
-            //creamos el siguiente cuadrante a la derecha de la imagen
-            var quadTL = new Point(frameBR.x+1,frameTL.y);
-            var quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
-            areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
-//            ctx.strokeRect(quadTL.x, quadTL.y, quadBR.x - quadTL.x, quadBR.y - quadTL.y);
+/**
+ * Funcion que autodetecta frames en el canvas
+ */
+function autoDetectFrames(){
+    listOfFrames = new Array();
+    var areaToCheck = new Array();
+    var canvasAutoDetect = document.createElement("canvas");
+    var ctxAutoDetect = canvasAutoDetect.getContext('2d');
+    canvasAutoDetect.width = img.width;
+    canvasAutoDetect.height = img.height;
+    if (img.width && img.height) ctxAutoDetect.drawImage(img, 0, 0);
+    var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
+    areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
+    for (var i = 0; i < areaToCheck.length; i++) {
+        for (var y = areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y; y++) {
+            for (var x = areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++) {
+                if (!isTransparent(x, y, imageDataToDetect)) {
+                    var pointFound = new Point(x, y);
+                    getSelectionAroundPoint(pointFound, imageDataToDetect);
+                    //pintaSelection();
+                    //añadimos el frame a la lista de frames
+                    var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
+                    var pointTL = new Point(selectionTL.x, selectionTL.y);
+                    var pointBR = new Point(selectionBR.x, selectionBR.y);
+                    listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
 
-            //Creamos el cuadrante que queda abajo del sprite
-            var quad2TL =  new Point(areaToCheck[i].pTL.x, frameBR.y+1);
-            var quad2BR = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
-            areaToCheck[areaToCheck.length] = {pTL:quad2TL,pBR:quad2BR};
-//            ctx.strokeRect(quad2TL.x, quad2TL.y, quad2BR.x - quad2TL.x, quad2BR.y - quad2TL.y);
-
-            // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
-            pActuBR.x = frameTL.x-1;
-            pActuBR.y = frameBR.y;
-        }else if(isAreaInsideFrame(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
-            //Si el frame ocupa el area ya estamos
-            pActuBR.x = areaToCheck[i].pTL.x; // we are done
-            pActuBR.y = areaToCheck[i].pTL.y; // we are done
-        }else{
-            //el frame se sale por algun lado
-            //si no sale por la derecha creamos el area a la derecha del frame
-            if (!isFrameOutsideRight(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)){
-                var quadTL  = new Point(frameBR.x+1,pointLooking.y);
-                var quadBR;
-                if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
-                    quadBR = new Point(areaToCheck[i].pBR.x, frameBR.y);
-                }else{
-                    quadBR = new Point(areaToCheck[i].pBR.x, areaToCheck[i].pBR.y);
-                }
-                areaToCheck[areaToCheck.length] = {pTL:quadTL,pBR:quadBR};
-//                ctx.strokeRect(quadTL.x, quadTL.y, quadBR.x - quadTL.x, quadBR.y - quadTL.y);
-
-            }
-
-            if (!isFrameOutsideBottom(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
-                //Creamos el cuadrante que queda abajo del sprite
-                var quadTL2 = new Point(areaToCheck[i].pTL.x, frameBR.y+1);
-                var quadBR2 = new Point(areaToCheck[i].pBR.x,areaToCheck[i].pBR.y);
-                areaToCheck[areaToCheck.length] = {pTL:quadTL2,pBR:quadBR2};
-  //              ctx.strokeRect(quadTL2.x, quadTL2.y, quadBR2.x - quadTL2.x, quadBR2.y - quadTL2.y);
-                pActuBR.y = frameBR.y; //cambiamos la zona actual para no solaparnos con la nueva zona
-            }
-
-            if (!isFrameOutsideLeft(areaToCheck[i].pTL,areaToCheck[i].pBR,frameTL,frameBR)) {
-                // lo que nos queda comprobar de este cuadrante lo ponemos como izquierda de la imagen
-                pActuBR.x =  frameTL.x-1;
-            }else{
-                //la izquierda del frame le toca a otro area y entonces ya hemos acabado en esta
-                pActuBR.x = areaToCheck[i].pTL.x; // we are done
-                pActuBR.y = areaToCheck[i].pTL.y; // we are done
-            }
-        }
-    }
-    areaToCheck[i].pBR.x = pActuBR.x;
-    areaToCheck[i].pBR.y = pActuBR.y;
-    //ctx.strokeRect(areaToCheck[i].pTL.x, areaToCheck[i].pTL.y, areaToCheck[i].pBR.x - areaToCheck[i].pTL.x, areaToCheck[i].pBR.y - areaToCheck[i].pTL.y);
-
-}
-
-function detectFrames(){
-    if (!img.src){
-        swal("No hay Imagen cargada", "No se ha cargado ninguna imagen todavia. Importe una imagen desde el menu archivo importar archivo.", "error");
-        $("#autoDetectFramesModal").hide();
-    }else {
-        var percentDifference = $("#percentDifferenceText").val();
-        if (!percentDifference || isNaN(percentDifference) || percentDifference < 0 || percentDifference >100){
-            swal("Valor Incorrecto", "El valor debe ser un número entre 0 y 100", "error");
-        }else{
-            if (!transparentColor) {
-                    swal("No hay transparencia", "No se ha detectado ningun pixel transparente en esta imagen, es necesario para poder utilizar esta funcionalidad." +
-                    " Puede seleccionar los frames manualmente o importar una imagen con transparencias", "error");
-            }else{
-                //todo Barra de progreso
-                $("body").css("cursor", "wait");
-                listOfFrames = new Array();
-                var areaToCheck = new Array();
-                $("#numFramesDetected").html("Numero de sprites detectados: 0");
-                var canvasAutoDetect = document.createElement("canvas");
-                var ctxAutoDetect = canvasAutoDetect.getContext('2d');
-                canvasAutoDetect.width = img.width;
-                canvasAutoDetect.height = img.height;
-                if (img.width && img.height) ctxAutoDetect.drawImage(img, 0, 0);
-                var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
-                areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
-                for (var i = 0; i < areaToCheck.length; i++) {
-                    for (var y = areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y; y++) {
-                        for (var x = areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++) {
-                            if (!isTransparent(x, y, imageDataToDetect)) {
-                                var pointFound = new Point(x, y);
-                                getSelectionAroundPoint(pointFound, imageDataToDetect);
-                                //pintaSelection();
-                                //añadimos el frame a la lista de frames
-                                var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
-                                var pointTL = new Point(selectionTL.x, selectionTL.y);
-                                var pointBR = new Point(selectionBR.x, selectionBR.y);
-                                listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
-
-                                //creamos nuevas areas alrededor de ese frame
-                                newAreasToCheck(areaToCheck, i, selectionTL, selectionBR, pointFound);
-                                //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
-                                for (var j = i + 1; j < areaToCheck.length; j++) {
-                                    newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
-                                }
-                            }
-                        }
+                    //creamos nuevas areas alrededor de ese frame
+                    newAreasToCheck(areaToCheck, i, selectionTL, selectionBR, pointFound);
+                    //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
+                    for (var j = i + 1; j < areaToCheck.length; j++) {
+                        newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
                     }
                 }
-                selectionTL.x = 0;
-                selectionTL.y = 0;
-                selectionBR.x = 0;
-                selectionBR.y = 0;
-                modeSelection = SELECTIONAUTO;
-                pinta();
-                pintaSelection();
-                $("body").css("cursor", "default");
-                /*swal({
-                 title: "¡Se han detectado " + listOfFrames.length + " frames!",
-                 text: "Se procedera a detectar las animaciones.", timer: 2000
-                 });*/
-                $("body").css("cursor", "wait");
-                autoDetectAnimations(percentDifference);
-                $("body").css("cursor", "default");
-                modeSelection = SELECTIONDEFAULT;
-                pinta();
-                $("#autoDetectFramesModal").hide();
-                swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
             }
         }
     }
+    selectionTL.x = 0;
+    selectionTL.y = 0;
+    selectionBR.x = 0;
+    selectionBR.y = 0;
 }
 
-
-
+/**
+ * funcion que compara frames segun el percentDifference y decide si son de un mismo Sprite o no
+ * @param percentDifference
+ */
 function autoDetectAnimations(percentDifference){
     var frameInSprite = new Array;
     var listaSprites = new Array;
@@ -922,23 +1040,44 @@ function autoDetectAnimations(percentDifference){
     }
 }
 
-/**
- * click en el boton Zoom in, hace que se amplie el zoom
+/***
+ * Logica de los botones de index.html
  */
-function zoomInBtn(){
-    currentScale += 0.1;
-    pinta();
-    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+/**
+ * Funcion del boton auto detectar animaciones
+ */
+function detectFramesAnimationsBtn(){
+    if (!img.src){
+        swal("No hay Imagen cargada", "No se ha cargado ninguna imagen todavia. Importe una imagen desde el menu archivo importar archivo.", "error");
+        $("#autoDetectFramesModal").hide();
+    }else {
+        var percentDifference = $("#percentDifferenceText").val();
+        if (!percentDifference || isNaN(percentDifference) || percentDifference < 0 || percentDifference >100){
+            swal("Valor Incorrecto", "El valor debe ser un número entre 0 y 100", "error");
+        }else{
+            if (!transparentColor) {
+                    swal("No hay transparencia", "No se ha detectado ningun pixel transparente en esta imagen, es necesario para poder utilizar esta funcionalidad." +
+                    " Puede seleccionar los frames manualmente o importar una imagen con transparencias", "error");
+            }else{
+                //todo Barra de progreso
+                $("body").css("cursor", "wait");
+                autoDetectFrames();
+                modeSelection = SELECTIONAUTO;
+                pinta();
+                pintaSelection();
+                $("body").css("cursor", "default");
+                $("body").css("cursor", "wait");
+                autoDetectAnimations(percentDifference);
+                $("body").css("cursor", "default");
+                modeSelection = SELECTIONDEFAULT;
+                pinta();
+                $("#autoDetectFramesModal").hide();
+                swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
+            }
+        }
+    }
 }
 
-/**
- * click en el boton Zoom Out, hace que se reduzca el zoom
- */
-function zoomOutBtn(){
-    currentScale -= 0.1;
-    pinta();
-    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-}
 
 /**
  * click de boton añadir al frame, añade la imagen seleccionada como frame de un sprite
@@ -1232,70 +1371,6 @@ function deleteFrameBtn(){
     }
 }
 
-function getSelectionAroundPoint(point, imageData){
-    puntosVisitados = new Array();
-    for(var i=0;i<imageData.width;i++){
-        puntosVisitados[i]=new Array();
-        for(var j=0;j<imageData.height;j++){
-            puntosVisitados[i][j]=false;
-        }
-    }
-
-    point.x = Math.round(point.x);
-    point.y = Math.round(point.y);
-    markPixel(point.x, point.y,true,imageData);
-    var minX = point.x - 1;
-    var maxX = point.x + 1;
-    var minY = point.y - 1;
-    var maxY = point.y + 1;
-
-    var finish = false;
-    while (!finish){
-        finish = true;
-        for (var y = minY; y <= maxY; y++){
-            for (var x = minX; x <= maxX; x++){
-                if (!pixelIsMarked(x,y, imageData) && !isTransparent(x,y,imageData) && isNeighbourOfMarkedPixel(x,y, imageData)){
-                    if (markPixel(x,y,true,imageData)){
-                        finish = false;
-                        if (x - 1 < minX) minX = x - 1;
-                        if (x + 1 > maxX) maxX = x + 1;
-                        if (y - 1 < minY) minY = y - 1;
-                        if (y + 1 > maxY) maxY = y + 1;
-                    }
-                }
-            }
-        }
-    }
-    selectionTL.x = minX + 1;
-    selectionTL.y = minY + 1;
-    selectionBR.x = maxX - 1;
-    selectionBR.y = maxY - 1;
-}
-
-
-function pixelIsMarked(x,y,imageData){
-    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
-        return false;
-    }
-    return puntosVisitados[x][y];
-}
-
-function isNeighbourOfMarkedPixel(x,y,imageData){
-    return (
-           pixelIsMarked(x - 1,y, imageData)
-        || pixelIsMarked(x + 1,y, imageData)
-        || pixelIsMarked(x, y - 1, imageData)
-        || pixelIsMarked(x, y + 1, imageData)
-    );
-}
-
-function markPixel(x,y, value, imageData){
-    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
-        return false;
-    }
-    puntosVisitados[x][y] = value;
-    return true;
-}
 
 function interpolateNextFrameBtn(){
     if (spriteSelectedName == -1 || selectedFrame == -1){

@@ -43,6 +43,12 @@ Spritesheet.prototype.createSprite = function(name){
     }
 };
 
+/**
+ *
+ * @param sprite
+ * @param rename
+ * @returns {boolean}
+ */
 Spritesheet.prototype.addSprite = function(sprite,rename){
     var exists = false;
     if (!rename){
@@ -72,6 +78,10 @@ Spritesheet.prototype.addSprite = function(sprite,rename){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ */
 Spritesheet.prototype.deleteSprite = function(spriteName){
     var found = false;
     for (var i=0; i < this.spriteList.length && !found; i++){
@@ -82,6 +92,11 @@ Spritesheet.prototype.deleteSprite = function(spriteName){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param frame
+ */
 Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     //buscar el nombre del sprite y añadir el frame
     var found = false;
@@ -93,12 +108,16 @@ Spritesheet.prototype.addFrameToSprite = function(spriteName, frame){
     }
 };
 
+/**
+ *
+ * @returns {Number}
+ */
 Spritesheet.prototype.getNumberSprites = function(){
     return this.spriteList.length;
 };
 
 /**
- * create a canvas with all the frames of all the sprites in horizontal
+ * create a canvas with all the frames of all the sprites
  * @returns {HTMLElement}
  */
 Spritesheet.prototype.getSpriteSheet = function(){
@@ -115,7 +134,12 @@ Spritesheet.prototype.getSpriteSheet = function(){
     return newCanvas;
 };
 
+/**
+ *
+ * @param type
+ */
 Spritesheet.prototype.organizeFunction = function(type){
+    type = ORGANIZEHORIZONTAL;
     switch (type){
         case ORGANIZELEFTTOP:
             this.organizeSpriteSheetLeftTop();
@@ -133,6 +157,9 @@ Spritesheet.prototype.organizeFunction = function(type){
 
 };
 
+/**
+ *
+ */
 Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
     this.wMax = 0;
     this.hMax = 0;
@@ -151,14 +178,32 @@ Spritesheet.prototype.organizeSpriteSheetHorizontalOnly = function(){
     }
 };
 
+/**
+ *
+ * @param a
+ * @param b
+ * @returns {number}
+ */
 Spritesheet.prototype.orderMetaByHeightDesc = function(a,b){
     return b.height - a.height;
 };
 
+/**
+ *
+ * @param a
+ * @param b
+ * @returns {number}
+ */
 Spritesheet.prototype.orderMetaByHeightAsc = function(a,b){
     return b.height - a.height;
 };
 
+/**
+ *
+ * @param a
+ * @param b
+ * @returns {number}
+ */
 Spritesheet.prototype.orderMetaByHeightWidthAsc = function(a,b){
     var calc = b.height - a.height;
     if (calc == 0){
@@ -168,6 +213,9 @@ Spritesheet.prototype.orderMetaByHeightWidthAsc = function(a,b){
     }
 };
 
+/**
+ *
+ */
 Spritesheet.prototype.fillMetaWithNoPosition = function(){
     this.frameMetaData = new Array();
     for (var i=0; i < this.spriteList.length; i++){
@@ -179,6 +227,10 @@ Spritesheet.prototype.fillMetaWithNoPosition = function(){
     }
 };
 
+/**
+ *
+ * @param maxWidth
+ */
 Spritesheet.prototype.organizeSpriteSheetShelf = function(maxWidth){
     this.fillMetaWithNoPosition();
     this.frameMetaData.sort(this.orderMetaByHeightAsc);
@@ -215,6 +267,9 @@ Spritesheet.prototype.organizeSpriteSheetShelf = function(maxWidth){
     this.hMax = y;
 };
 
+/**
+ *
+ */
 Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
     this.fillMetaWithNoPosition();
     this.frameMetaData.sort(this.orderMetaByHeightWidthAsc);
@@ -265,6 +320,11 @@ Spritesheet.prototype.organizeSpriteSheetLeftTop = function(){
 
 };
 
+/**
+ *
+ * @param w
+ * @param h
+ */
 Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
     var  matrix = [];
     matrix[0] = [];
@@ -296,7 +356,11 @@ Spritesheet.prototype.fillMetaDataWithArea = function(w, h){
     }
 };
 
-
+/**
+ *
+ * @param matrix
+ * @returns {boolean}
+ */
 Spritesheet.prototype.fitAllItems = function(matrix){
     var fit = true;
     for (var i = 0; fit && (i < this.frameMetaData.length); i++){
@@ -366,6 +430,15 @@ Spritesheet.prototype.fitAllItems = function(matrix){
     return fit;
 };
 
+/**
+ *
+ * @param matrix
+ * @param wObj
+ * @param hObj
+ * @param i
+ * @param j
+ * @returns {boolean}
+ */
 Spritesheet.prototype.checkAreaFree = function(matrix, wObj, hObj, i, j) {
     var hRemaining = hObj;
     var nextRow = i;
@@ -385,6 +458,12 @@ Spritesheet.prototype.checkAreaFree = function(matrix, wObj, hObj, i, j) {
     return !(hRemaining > 0);
 };
 
+/**
+ *
+ * @param matrix
+ * @param k
+ * @param width
+ */
 Spritesheet.prototype.addColumn = function(matrix,k, width){
     for (var i=0; i < matrix.length;i++){
         matrix[i].length = matrix[i].length + 1;
@@ -401,6 +480,12 @@ Spritesheet.prototype.addColumn = function(matrix,k, width){
     }
 };
 
+/**
+ *
+ * @param matrix
+ * @param k
+ * @param height
+ */
 Spritesheet.prototype.addRow = function(matrix,k, height){
     matrix.length = matrix.length + 1;
     matrix[matrix.length -1] = [];
@@ -420,10 +505,20 @@ Spritesheet.prototype.addRow = function(matrix,k, height){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @returns {boolean}
+ */
 Spritesheet.prototype.existsSprite = function(spriteName){
     return !(this.getSpriteByName(spriteName) == null);
 };
 
+/**
+ *
+ * @param spriteName
+ * @returns {*}
+ */
 Spritesheet.prototype.getSpriteByName = function(spriteName){
     for (var i=0; i < this.spriteList.length; i++){
         if (this.spriteList[i].getName() == spriteName){
@@ -433,6 +528,11 @@ Spritesheet.prototype.getSpriteByName = function(spriteName){
     return null;
 };
 
+/**
+ *
+ * @param spriteName
+ * @returns {*}
+ */
 Spritesheet.prototype.getPositionSpriteByName = function(spriteName){
     for (var i=0; i < this.spriteList.length; i++){
         if (this.spriteList[i].getName() == spriteName){
@@ -442,7 +542,11 @@ Spritesheet.prototype.getPositionSpriteByName = function(spriteName){
     return null;
 };
 
-
+/**
+ *
+ * @param spriteName
+ * @param canvas
+ */
 Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
@@ -467,6 +571,12 @@ Spritesheet.prototype.paintFrameSelectionImage = function(spriteName, canvas) {
     }
 };
 
+
+/**
+ *
+ * @param spriteName
+ * @returns {number}
+ */
 Spritesheet.prototype.maxYRect = function(spriteName) {
     var thisSprite = this.getSpriteByName(spriteName);
     var y = 0;
@@ -483,6 +593,14 @@ Spritesheet.prototype.maxYRect = function(spriteName) {
     return y;
 };
 
+/**
+ *
+ * @param spriteName
+ * @param mousePos
+ * @param canvas
+ * @param yDespl
+ * @returns {number}
+ */
 Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas, yDespl) {
     var ctx = canvas.getContext('2d');
     var thisSprite = this.getSpriteByName(spriteName);
@@ -524,6 +642,13 @@ Spritesheet.prototype.paintSelectionRect = function(spriteName, mousePos,canvas,
     return spriteSelected;
 };
 
+/**
+ *
+ * @param spriteName
+ * @param mousePos
+ * @param yDespl
+ * @returns {number|*}
+ */
 Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos, yDespl){
     var thisSprite = this.getSpriteByName(spriteName);
     this.spriteSelected = -1;
@@ -550,37 +675,13 @@ Spritesheet.prototype.marcaFrameSelected = function(spriteName, mousePos, yDespl
     return this.frameSelected;
 };
 
-Spritesheet.prototype.getSelectionedFrame = function(spriteName){
-    var thisSprite = this.getSpriteByName(spriteName);
-    if (spriteName == this.spriteSelected){
-        return this.frameSelected;
-    }else {
-        /* var spriteSelected = -1;
-         if (thisSprite != null){
-         var x = 0;
-         var y = 0;
-         var found = false;
-         for (var i=0;thisSprite.existsFrame(i) && !found;i++){
-         var image = thisSprite.getFrame(i).getImageFrame();
-         var yEnd = y + thisSprite.getMaxHeight();
-         var xEnd = x + thisSprite.getMaxWidth()
-         if (mousePos.y <= yEnd && mousePos.y >= y && mousePos.x >= x && mousePos.x <= xEnd){
-         found = true;
-         spriteSelected = i;
-         }
-         x = x + thisSprite.getMaxWidth();
-         if ((x + thisSprite.getMaxWidth()) > canvas.width){
-         x = 0;
-         y = y + thisSprite.getMaxHeight();
-         }
-         }
-         }
-         }
-         return spriteSelected;*/
-        return -1;
-    }
-};
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ * @returns {*}
+ */
 Spritesheet.prototype.getSelectionImage = function(spriteName, nFrame) {
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null) {
@@ -591,6 +692,12 @@ Spritesheet.prototype.getSelectionImage = function(spriteName, nFrame) {
     return null; //if not found
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ * @returns {*}
+ */
 Spritesheet.prototype.getPositionFrame = function(spriteName, nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -600,6 +707,12 @@ Spritesheet.prototype.getPositionFrame = function(spriteName, nFrame){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ * @returns {*}
+ */
 Spritesheet.prototype.getMs = function(spriteName, nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -609,6 +722,12 @@ Spritesheet.prototype.getMs = function(spriteName, nFrame){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ * @param pos
+ */
 Spritesheet.prototype.setPositionFrame = function(spriteName, nFrame, pos){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -618,6 +737,12 @@ Spritesheet.prototype.setPositionFrame = function(spriteName, nFrame, pos){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ * @param ms
+ */
 Spritesheet.prototype.setMsToFrame = function(spriteName, nFrame, ms){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -627,6 +752,11 @@ Spritesheet.prototype.setMsToFrame = function(spriteName, nFrame, ms){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param ms
+ */
 Spritesheet.prototype.setMsFixedToAll = function(spriteName, ms){
     var thisSprite =this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -636,6 +766,12 @@ Spritesheet.prototype.setMsFixedToAll = function(spriteName, ms){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nframe
+ * @param frame
+ */
 Spritesheet.prototype.modifyFrameN = function(spriteName, nframe, frame){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -645,6 +781,9 @@ Spritesheet.prototype.modifyFrameN = function(spriteName, nframe, frame){
     }
 };
 
+/**
+ *
+ */
 Spritesheet.prototype.stopOldAnimation = function(){
     if (this.oldAnimation != -1){
         this.spriteList[this.oldAnimation].stopAnimation();
@@ -652,6 +791,11 @@ Spritesheet.prototype.stopOldAnimation = function(){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param canvas
+ */
 Spritesheet.prototype.paintAnimation = function(spriteName, canvas){
     var thisSprite = this.getPositionSpriteByName(spriteName);
     if (thisSprite != null){
@@ -661,6 +805,11 @@ Spritesheet.prototype.paintAnimation = function(spriteName, canvas){
     }
 };
 
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ */
 Spritesheet.prototype.delFrame = function(spriteName, nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
     if (thisSprite != null){
@@ -670,7 +819,10 @@ Spritesheet.prototype.delFrame = function(spriteName, nFrame){
     }
 };
 
-
+/**
+ *
+ * @returns {number}
+ */
 Spritesheet.prototype.getNumberTotalFrames = function() {
     var n = 0;
     for (var i=0; i < this.spriteList.length;i++){
@@ -679,6 +831,11 @@ Spritesheet.prototype.getNumberTotalFrames = function() {
     return n;
 };
 
+/**
+ *
+ * @param spriteName
+ * @returns {number}
+ */
 Spritesheet.prototype.getNumberFrames = function(spriteName){
     var thisSprite = this.getSpriteByName(spriteName);
     var n = 0;
@@ -688,6 +845,12 @@ Spritesheet.prototype.getNumberFrames = function(spriteName){
     return n;
 };
 
+/**
+ *  retorna la posicion del vector del sprite y del frame, la posicion donde tiene que pintarse y la altura y la amplitud del frame
+ * @param sprite
+ * @param frame
+ * @returns {*}
+ */
 Spritesheet.prototype.getMetaDataInfoFrom = function(sprite,frame){
     for (var i=0; i < this.frameMetaData.length;i++){
         var frMeta = this.frameMetaData[i];
@@ -696,6 +859,10 @@ Spritesheet.prototype.getMetaDataInfoFrom = function(sprite,frame){
     return null;
 };
 
+/**
+ *
+ * @returns {string}
+ */
 Spritesheet.prototype.getClanLibXML = function(){
     this.organizeFunction();
     var text = "";
@@ -726,43 +893,30 @@ Spritesheet.prototype.getClanLibXML = function(){
 
 };
 
-Spritesheet.prototype.getCocos2Dplist = function(){
-    var text = "";
-    text = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
-    text = '<plist version="1.0">\r\n';
-    text = '    <dict>\r\n';
-    text = '        <key>frames</key>\r\n';
-    text = '        <dict>\r\n';
-    //toDo
-    //              <key>slice01_01.png</key>
-    //              <dict>
-    //                  <key>frame</key>
-    //                  <string>{{423,777},{43,47}}</string>
-    //                  <key>offset</key>
-    //                  <string>{0,0}</string>
-    //                  <key>rotated</key>
-    //                  <false/>
-    //                  <key>sourceColorRect</key>
-    //                  <string>{{0,0},{43,47}}</string>
-    //                  <key>sourceSize</key>
-    //                  <string>{43,47}</string>
-    //              </dict>
-    //ftodo
-    text = '        </dict>\r\n';
-    text = '    </dict>\r\n';
-    text = '</plist>\r\n';
-};
-
+/**
+ *
+ * @param spriteName
+ * @param nFrame
+ */
 Spritesheet.prototype.interpolateNextFrame = function(spriteName,nFrame){
     var thisSprite = this.getSpriteByName(spriteName);
     thisSprite.interpolateNextFrame(nFrame);
 };
 
+/**
+ *
+ * @param spriteName
+ * @param func
+ */
 Spritesheet.prototype.autoTuneTimeMs = function(spriteName, func){
     var thisSprite = this.getSpriteByName(spriteName);
     thisSprite.autoTuneTimeMs(func);
 };
 
+/**
+ *
+ * @param num
+ */
 Spritesheet.prototype.setSelectedFrame = function(num){
     if (this.spriteSelected >= 0 && this.spriteSelected < this.spriteList.length) {
         if (num <= this.spriteList[this.spriteSelected].getNumberFrames() && num >= 0) {
