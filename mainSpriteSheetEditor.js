@@ -244,9 +244,9 @@ function doMouseDblClick(event){
         case 1:
             if (modeCanvas == IMPORTEDIMAGE){
                 if (transparentColor){
-                    getSelectionAroundPoint(mousePos,imageDataPixels);
-                    pinta();
-                    pintaSelection();
+                    imageDataPixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+                    $("#loadBar").modal('show');
+                    getSelectionAroundPoint(mousePos,imageDataPixels, finishDblClick);
                 }
                 break;
             }
@@ -254,6 +254,15 @@ function doMouseDblClick(event){
     }
 }
 
+function finishDblClick(){
+    selectionTL.x = minX + 1;
+    selectionTL.y = minY + 1;
+    selectionBR.x = maxX - 1;
+    selectionBR.y = maxY - 1;
+    $("#loadBar").modal('hide');
+    pinta();
+    pintaSelection();
+}
 
 /**
  * evento que controla el movimiento del raton
@@ -683,61 +692,88 @@ function processLoop( actionFunc, numTimes, doneFunc ) {
     f();
 }
 
-imageData
 /**
  * Devuelve la seleccion alrededor de un punto seleccionado (automaticamente
  * @param point
  * @param imageData
  */
-function getSelectionAroundPoint(point, imageData){
+var imageDataTmp = {'width':0,'height': 0,'data':new Array()};
+var minX;
+var maxX;
+var minY;
+var maxY;
+function getSelectionAroundPoint(point, imageData, onEnd){
+    minX =0;
+    minY = 0;
+    maxX = 0;
+    maxY = 0;
+    imageDataTmp.width = imageData.width;
+    imageDataTmp.height = imageData.height;
+    for (var i=0; i < imageData.data.length; i++){
+        imageDataTmp.data[i] = imageData.data[i];
+    }
     puntosVisitados = new Array();
-    for(var i=0;i<imageData.width;i++){
+    for(var i=0;i<imageDataTmp.width;i++){
         puntosVisitados[i]=new Array();
-        for(var j=0;j<imageData.height;j++){
+        for(var j=0;j<imageDataTmp.height;j++){
             puntosVisitados[i][j]=false;
         }
     }
-
     point.x = Math.round(point.x);
     point.y = Math.round(point.y);
-    markPixel(point.x, point.y,true,imageData);
-    var minX = point.x - 1;
-    var maxX = point.x + 1;
-    var minY = point.y - 1;
-    var maxY = point.y + 1;
+    markPixel(point.x, point.y,true,imageDataTmp);
+    minX = point.x - 1;
+    maxX = point.x + 1;
+    minY = point.y - 1;
+    maxY = point.y + 1;
+    setTimeout(function(){
+        checkPoints(onEnd);
+    }, 0);
 
-    var finish = false;
-    while (!finish){
-        finish = true;
-        for (var y = minY; y <= maxY; y++){
-            for (var x = minX; x <= maxX; x++){
-                if (!pixelIsMarked(x,y, imageData) && !isTransparent(x,y,imageData) && isNeighbourOfMarkedPixel(x,y, imageData)){
-                    if (markPixel(x,y,true,imageData)){
-                        finish = false;
-                        if (x - 1 < minX) minX = x - 1;
-                        if (x + 1 > maxX) maxX = x + 1;
-                        if (y - 1 < minY) minY = y - 1;
-                        if (y + 1 > maxY) maxY = y + 1;
-                    }
+}
+
+
+function checkPoints(func){
+    var changed = false;
+    for (var y = minY; y <= maxY; y++){
+        for (var x = minX; x <= maxX; x++){
+            if (!pixelIsMarked(x,y, imageDataTmp) && !isTransparent(x,y,imageDataTmp) && isNeighbourOfMarkedPixel(x,y, imageDataTmp)){
+                if (markPixel(x,y,true,imageDataTmp)){
+                    if (x - 1 < minX) minX = x - 1;
+                    if (x + 1 > maxX) maxX = x + 1;
+                    if (y - 1 < minY) minY = y - 1;
+                    if (y + 1 > maxY) maxY = y + 1;
+                    changed = true;
                 }
             }
         }
     }
-    selectionTL.x = minX + 1;
-    selectionTL.y = minY + 1;
-    selectionBR.x = maxX - 1;
-    selectionBR.y = maxY - 1;
+    if (changed){
+        var val = $("#progressBar").val();
+        if (val>= 100){
+            $("#progressBar").val(0);
+        }else{
+            $("#progressBar").val(val+1);
+        }
+        setTimeout(function(){
+            checkPoints(func);
+        },0);
+    }else{
+        func();
+    }
 }
+
+
 
 /**
  * Funcion auxiliar de getSelectionAroundPoint que se utiliza para saber si ya hemos visitado un pixel
  * @param x
  * @param y
- * @param imageData
+ * @param imgData
  * @returns {*}
  */
-function pixelIsMarked(x,y,imageData){
-    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
+function pixelIsMarked(x,y,imgData){
+    if (x < 0 || y < 0 || x >= imgData.width || y >= imgData.height){
         return false;
     }
     return puntosVisitados[x][y];
@@ -746,15 +782,15 @@ function pixelIsMarked(x,y,imageData){
  * Funcion auxiliar de getSelectionAroundPoint que se utiliza para saber si un vecino del punto x y esta visitado
  * @param x
  * @param y
- * @param imageData
+ * @param imgData
  * @returns {*}
  */
-function isNeighbourOfMarkedPixel(x,y,imageData){
+function isNeighbourOfMarkedPixel(x,y,imgData){
     return (
-    pixelIsMarked(x - 1,y, imageData)
-    || pixelIsMarked(x + 1,y, imageData)
-    || pixelIsMarked(x, y - 1, imageData)
-    || pixelIsMarked(x, y + 1, imageData)
+    pixelIsMarked(x - 1,y, imgData)
+    || pixelIsMarked(x + 1,y, imgData)
+    || pixelIsMarked(x, y - 1, imgData)
+    || pixelIsMarked(x, y + 1, imgData)
     );
 }
 
@@ -766,8 +802,8 @@ function isNeighbourOfMarkedPixel(x,y,imageData){
  * @param imageData
  * @returns {boolean}
  */
-function markPixel(x,y, value, imageData){
-    if (x < 0 || y < 0 || x >= imageData.width || y >= imageData.height){
+function markPixel(x,y, value, imgData){
+    if (x < 0 || y < 0 || x >= imgData.width || y >= imgData.height){
         return false;
     }
     puntosVisitados[x][y] = value;
@@ -780,9 +816,9 @@ function markPixel(x,y, value, imageData){
  * @param dataImage
  * @returns {boolean}
  */
-function isTransparent(x,y, dataImage){
-    var pixelCoord = x*4+y*dataImage.width*4;
-    if (dataImage.data[pixelCoord+IMGDATAALPHA] == 0){
+function isTransparent(x,y, imgData){
+    var pixelCoord = x*4+y*imgData.width*4;
+    if (imgData.data[pixelCoord+IMGDATAALPHA] == 0){
         return true;
     }else{
         return false;
@@ -949,45 +985,125 @@ function isFrameParciallyInArea(pointAreaTL,pointAreaBR, pointFrameTL, pointFram
 /**
  * Funcion que autodetecta frames en el canvas
  */
+var xAuto;
+var yAuto;
+var areaToCheck;
+var canvasAutoDetect;
+var ctxAutoDetect;
+var imageDataToDetect;
+var areasToCheckN;
+var pointFound;
 function autoDetectFrames(){
     listOfFrames = new Array();
-    var areaToCheck = new Array();
-    var canvasAutoDetect = document.createElement("canvas");
-    var ctxAutoDetect = canvasAutoDetect.getContext('2d');
+    areaToCheck = new Array();
+    canvasAutoDetect = document.createElement("canvas");
+    ctxAutoDetect = canvasAutoDetect.getContext('2d');
     canvasAutoDetect.width = img.width;
     canvasAutoDetect.height = img.height;
     if (img.width && img.height) ctxAutoDetect.drawImage(img, 0, 0);
-    var imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
+    imageDataToDetect = ctxAutoDetect.getImageData(0, 0, canvasAutoDetect.width, canvasAutoDetect.height);
     areaToCheck[0] = {pTL: new Point(0, 0), pBR: new Point(imageDataToDetect.width, imageDataToDetect.height)};
-    for (var i = 0; i < areaToCheck.length; i++) {
-        for (var y = areaToCheck[i].pTL.y; y < areaToCheck[i].pBR.y; y++) {
-            for (var x = areaToCheck[i].pTL.x; x < areaToCheck[i].pBR.x; x++) {
-                if (!isTransparent(x, y, imageDataToDetect)) {
-                    var pointFound = new Point(x, y);
-                    getSelectionAroundPoint(pointFound, imageDataToDetect);
-                    //pintaSelection();
-                    //añadimos el frame a la lista de frames
-                    var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
-                    var pointTL = new Point(selectionTL.x, selectionTL.y);
-                    var pointBR = new Point(selectionBR.x, selectionBR.y);
-                    listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
+    areasToCheckN = 0;
+    setTimeout(function(){
+        areasToCheck();
+    },0);
 
-                    //creamos nuevas areas alrededor de ese frame
-                    newAreasToCheck(areaToCheck, i, selectionTL, selectionBR, pointFound);
-                    //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
-                    for (var j = i + 1; j < areaToCheck.length; j++) {
-                        newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
-                    }
-                }
-            }
-        }
-    }
-    selectionTL.x = 0;
-    selectionTL.y = 0;
-    selectionBR.x = 0;
-    selectionBR.y = 0;
 }
 
+function areasToCheck(){
+    if (areasToCheckN >= areaToCheck.length){
+        selectionTL.x = 0;
+        selectionTL.y = 0;
+        selectionBR.x = 0;
+        selectionBR.y = 0;
+        endAutoDetectFrames();
+    }else{
+        setTimeout(function(){
+            yAuto = areaToCheck[areasToCheckN].pTL.y;
+            loopY();
+        },0);
+    }
+}
+
+
+function loopY(){
+    var val = $("#progressBar").val();
+    if (val>= 100){
+        $("#progressBar").val(0);
+    }else{
+        $("#progressBar").val(val+1);
+    }
+    if (yAuto >= areaToCheck[areasToCheckN].pBR.y){
+        setTimeout(function(){
+            areasToCheckN++;
+            areasToCheck();
+
+        },0);
+    }else{
+        setTimeout(function(){
+            xAuto = areaToCheck[areasToCheckN].pTL.x;
+            loopX();
+        },0);
+    }
+}
+
+function loopX(){
+    if (xAuto >= areaToCheck[areasToCheckN].pBR.x) {
+        setTimeout(function(){
+            yAuto++;
+            loopY();
+        },0);
+    }else{
+        if (!isTransparent(xAuto, yAuto, imageDataToDetect)) {
+            pointFound = new Point(xAuto, yAuto);
+            getSelectionAroundPoint(pointFound, imageDataToDetect,continueLoopX);
+        }else{
+            xAuto++;
+            loopX();
+        }
+    }
+}
+
+function continueLoopX(){
+    //añadimos el frame a la lista de frames
+
+    selectionTL.x = minX + 1;
+    selectionTL.y = minY + 1;
+    selectionBR.x = maxX - 1;
+    selectionBR.y = maxY - 1;
+
+    var frame = getSelectedFrame(selectionTL, selectionBR, canvasAutoDetect);
+    var pointTL = new Point(selectionTL.x, selectionTL.y);
+    var pointBR = new Point(selectionBR.x, selectionBR.y);
+    listOfFrames[listOfFrames.length] = {TL: pointTL, BR: pointBR, frame: frame};
+
+    //creamos nuevas areas alrededor de ese frame
+    newAreasToCheck(areaToCheck, areasToCheckN, selectionTL, selectionBR, pointFound);
+    //comprobamos si ese frame esta en otras areas a mirar (parcialmente) y creamos nuevas areas a su alrededor
+    for (var j = areasToCheckN + 1; j < areaToCheck.length; j++) {
+        newAreasToCheck(areaToCheck, j, selectionTL, selectionBR, areaToCheck[j].pTL);
+    }
+    setTimeout(function(){
+        xAuto++;
+        loopX();
+    },0);
+
+}
+
+function endAutoDetectFrames(){
+    modeSelection = SELECTIONAUTO;
+    pinta();
+    pintaSelection();
+    $("body").css("cursor", "default");
+    $("body").css("cursor", "wait");
+    autoDetectAnimations(percentDifference);
+    $("body").css("cursor", "default");
+    modeSelection = SELECTIONDEFAULT;
+    pinta();
+    $("#autoDetectFramesModal").hide();
+    $("#loadBar").modal('hide');
+    swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
+}
 /**
  * funcion que compara frames segun el percentDifference y decide si son de un mismo Sprite o no
  * @param percentDifference
@@ -1039,7 +1155,7 @@ function autoDetectAnimations(percentDifference){
         }
     }
 }
-
+var percentDifference;
 /***
  * Logica de los botones de index.html
  */
@@ -1051,7 +1167,7 @@ function detectFramesAnimationsBtn(){
         swal("No hay Imagen cargada", "No se ha cargado ninguna imagen todavia. Importe una imagen desde el menu archivo importar archivo.", "error");
         $("#autoDetectFramesModal").hide();
     }else {
-        var percentDifference = $("#percentDifferenceText").val();
+        percentDifference = $("#percentDifferenceText").val();
         if (!percentDifference || isNaN(percentDifference) || percentDifference < 0 || percentDifference >100){
             swal("Valor Incorrecto", "El valor debe ser un número entre 0 y 100", "error");
         }else{
@@ -1059,20 +1175,10 @@ function detectFramesAnimationsBtn(){
                     swal("No hay transparencia", "No se ha detectado ningun pixel transparente en esta imagen, es necesario para poder utilizar esta funcionalidad." +
                     " Puede seleccionar los frames manualmente o importar una imagen con transparencias", "error");
             }else{
-                //todo Barra de progreso
+                $("#loadBar").modal('show');
                 $("body").css("cursor", "wait");
                 autoDetectFrames();
-                modeSelection = SELECTIONAUTO;
-                pinta();
-                pintaSelection();
-                $("body").css("cursor", "default");
-                $("body").css("cursor", "wait");
-                autoDetectAnimations(percentDifference);
-                $("body").css("cursor", "default");
-                modeSelection = SELECTIONDEFAULT;
-                pinta();
-                $("#autoDetectFramesModal").hide();
-                swal("AutoDetectar finalizado","Se han detectado las animaciones correctamente","success");
+/* */
             }
         }
     }
