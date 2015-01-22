@@ -11,3 +11,5 @@ development (like ClanLib Game SDK).
 
 El proyecto consiste en implementar una aplicación online que ofrecerá al usuario la capacidad de generar y visualizar sprites animados o no a partir de un sprite sheet mediante la selección y edición de los frames incluidos en el sheet.
 El programa permitirá exportar los sprites con las animaciones en diversos formatos como XML para poder ser utilizadas en el desarrollo de videojuegos basados en el uso de librerías (como ClanLib Game SDK).
+
+Encontrarás la última versión del proyecto en: https://github.com/buiytre/spriteSheetGeneratorTFG
