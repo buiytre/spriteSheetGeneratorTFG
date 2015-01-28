@@ -402,7 +402,7 @@ Sprite.prototype.insertFrameNextTo = function(frame,n){
  * @returns {number}
  */
 Sprite.prototype.autoTuneCalcSlowDiffFunc = function(dif, count){
-    return dif*200 + 200*count;
+    return dif*2 + 200*count;
 };
 
 /**
@@ -412,7 +412,7 @@ Sprite.prototype.autoTuneCalcSlowDiffFunc = function(dif, count){
  * @returns {number}
  */
 Sprite.prototype.autoTuneCalcFastDiffFunc = function(dif, count){
-    return (200 - dif*200) + 200*count;
+    return (200 - dif*2) + 200*count;
 };
 
 /**

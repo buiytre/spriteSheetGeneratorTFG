@@ -139,7 +139,6 @@ Spritesheet.prototype.getSpriteSheet = function(){
  * @param type
  */
 Spritesheet.prototype.organizeFunction = function(type){
-    type = ORGANIZEHORIZONTAL;
     switch (type){
         case ORGANIZELEFTTOP:
             this.organizeSpriteSheetLeftTop();

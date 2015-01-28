@@ -1471,8 +1471,10 @@ function deleteFrameBtn(){
                 var text = "El frame " + selectedFrame + " del sprite " + spriteSelectedName + " se ha eliminado correcamente";
                 selectedFrame = -1;
                 sheet.setSelectedFrame(-1);
+                changePreview();
                 pinta();
                 swal("Eliminado",text,"success");
+
             });
     }
 }
@@ -1538,7 +1540,7 @@ function putCanvasInModeSprite(){
         $("#listadoSprites").hide();
         $("#editFrameMode").hide();
         $("#zoom").hide();
-        $("#info").html("MODO EDICION DE SPRITE. Editando "+ spriteSelectedName);
+        $("#info").html("MODO EDICIÓN DE SPRITE. Editando "+ spriteSelectedName);
     }else{
         swal("Seleccionar sprite","No puedes ir al modo editar sin haber seleccionado un sprite");
     }
@@ -1572,7 +1574,7 @@ function putCanvasInModeFrame() {
         $("#editFrameMode").show();
         $("#listadoSprites").hide();
         $("#zoom").hide();
-        $("#info").html("MODO EDICION DE FAME. Editando frame "+ selectedFrame + ' de ' + spriteSelectedName);
+        $("#info").html("MODO EDICIÓN DE FRAME. Editando frame "+ selectedFrame + ' de ' + spriteSelectedName);
 
     }
 }
